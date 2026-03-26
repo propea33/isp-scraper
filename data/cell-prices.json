@@ -1,0 +1,80 @@
+{
+  "updated_at": "2026-03-26T10:54:48Z",
+  "scraped_count": 0,
+  "fallback_count": 8,
+  "region": "quebec",
+  "plans": [
+    {
+      "provider": "Telus",
+      "data_gb": 15,
+      "price": 95.0,
+      "network": "Telus",
+      "plan_name": "15 Go",
+      "url": "https://www.telus.com/en/mobility/plans",
+      "scraped_ok": false
+    },
+    {
+      "provider": "Fido",
+      "data_gb": 20,
+      "price": 65.0,
+      "network": "Rogers",
+      "plan_name": "20 Go",
+      "url": "https://www.fido.ca/en/phones/plans",
+      "scraped_ok": false
+    },
+    {
+      "provider": "Koodo",
+      "data_gb": 15,
+      "price": 60.0,
+      "network": "Telus",
+      "plan_name": "15 Go",
+      "url": "https://www.koodomobile.com/en/plans",
+      "scraped_ok": false
+    },
+    {
+      "provider": "Vidéotron",
+      "data_gb": 15,
+      "price": 58.0,
+      "network": "Vidéotron",
+      "plan_name": "15 Go",
+      "url": "https://www.videotron.com/en/mobility/plans",
+      "scraped_ok": false
+    },
+    {
+      "provider": "Public Mobile",
+      "data_gb": 15,
+      "price": 55.0,
+      "network": "Telus",
+      "plan_name": "15 Go",
+      "url": "https://www.publicmobile.ca/en/on/plans",
+      "scraped_ok": false
+    },
+    {
+      "provider": "Fizz",
+      "data_gb": 15,
+      "price": 50.0,
+      "network": "Vidéotron",
+      "plan_name": "15 Go",
+      "url": "https://fizz.ca/en/cell-plans",
+      "scraped_ok": false
+    },
+    {
+      "provider": "Lucky Mobile",
+      "data_gb": 15,
+      "price": 45.0,
+      "network": "Bell",
+      "plan_name": "15 Go",
+      "url": "https://www.luckymobile.ca/plans",
+      "scraped_ok": false
+    },
+    {
+      "provider": "Chatr",
+      "data_gb": 10,
+      "price": 40.0,
+      "network": "Rogers",
+      "plan_name": "10 Go",
+      "url": "https://www.chatrwireless.com/plans",
+      "scraped_ok": false
+    }
+  ]
+}
