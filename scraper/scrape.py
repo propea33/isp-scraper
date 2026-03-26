@@ -286,7 +286,11 @@ def check_price_sanity(provider: str, new_plan: ISPPlan, prev_prices: dict) -> b
     max_delta = cfg.get("max_price_delta_pct", 30)
     if provider not in prev_prices:
         return True
-    prev_price = prev_prices[provider].get("price", 0)
+    prev = prev_prices[provider]
+    # Si la donnée précédente était elle-même un fallback (non scrapé), on accepte
+    if not prev.get("scraped_ok", True):
+        return True
+    prev_price = prev.get("price", 0)
     if prev_price <= 0:
         return True
     delta_pct = abs(new_plan.price - prev_price) / prev_price * 100
@@ -338,7 +342,11 @@ def check_cell_price_sanity(provider: str, new_plan: CellPlan, prev_prices: dict
     max_delta = cfg.get("max_price_delta_pct", 30)
     if provider not in prev_prices:
         return True
-    prev_price = prev_prices[provider].get("price", 0)
+    prev = prev_prices[provider]
+    # Si la donnée précédente était elle-même un fallback (non scrapé), on accepte
+    if not prev.get("scraped_ok", True):
+        return True
+    prev_price = prev.get("price", 0)
     if prev_price <= 0:
         return True
     delta_pct = abs(new_plan.price - prev_price) / prev_price * 100
