@@ -312,7 +312,11 @@ async def _dom_fallback(page) -> dict | None:
 # ──────────────────────────────────────────────────────────────────────────────
 
 async def scrape_videotron_pw(page) -> dict | None:
-    """Vidéotron — React SPA. Interception API + DOM."""
+    """
+    Vidéotron — Next.js/React SPA.
+    Cherche d'abord __NEXT_DATA__ (données SSR injectées dans la page),
+    puis intercepte les appels API, puis parse le DOM.
+    """
     URL = "https://www.videotron.com/en/internet"
     try:
         captured = await _navigate_and_intercept(page, URL)
@@ -320,7 +324,37 @@ async def scrape_videotron_pw(page) -> dict | None:
             result = select_plan(captured)
             if result:
                 return result
-        return await _dom_fallback(page)
+
+        content = await page.content()
+        soup = BeautifulSoup(content, "lxml")
+
+        # Next.js injecte toutes les données dans <script id="__NEXT_DATA__">
+        next_data = soup.find("script", {"id": "__NEXT_DATA__"})
+        if next_data and next_data.string:
+            found = plans_from_json(next_data.string)
+            if found:
+                result = select_plan(found)
+                if result:
+                    return result
+
+        # Cherche aussi window.__STATE__ ou window.__INITIAL_STATE__
+        for script in soup.find_all("script"):
+            raw = script.string or ""
+            if not raw or len(raw) < 100:
+                continue
+            if not any(k in raw for k in ("price", "prix", "speed", "vitesse", "Mbps")):
+                continue
+            found = plans_from_json(raw)
+            if found:
+                result = select_plan(found)
+                if result:
+                    return result
+
+        # Texte de la page rendue
+        text = soup.get_text(" ")
+        plans = plans_from_text(text)
+        return select_plan(plans)
+
     except Exception as e:
         print(f"    videotron error: {e}")
     return None
@@ -394,10 +428,15 @@ async def scrape_ebox_pw(page) -> dict | None:
 async def scrape_vmedia_pw(page) -> dict | None:
     """
     VMedia — Angular.js.
-    Sélecteurs Angular confirmés après rendu :
+    Extraction par carte (.new-internet-package) pour garantir l'appariement
+    prix ↔ vitesse. On ne prend pas les éléments globalement pour éviter
+    les décalages d'index.
+
+    Sélecteurs Angular confirmés :
+      .new-internet-package         → carte complète d'un forfait
       .homeinternet-price__integer  → partie entière du prix
-      .homeinternet-price__decimal  → partie décimale
-      .plans-tile__speed-item-count → valeur de la vitesse (download, upload en alternance)
+      .homeinternet-price__decimal  → partie décimale du prix
+      .plans-tile__speed-item-count → vitesses (1re = download, 2e = upload)
     """
     URL = "https://www.vmedia.ca/en/homeinternet"
     try:
@@ -405,46 +444,42 @@ async def scrape_vmedia_pw(page) -> dict | None:
 
         # Attente qu'Angular rende les cartes
         try:
-            await page.wait_for_selector(
-                ".homeinternet-price__integer, .new-internet-package",
-                timeout=15000
-            )
+            await page.wait_for_selector(".new-internet-package", timeout=15000)
         except PWTimeout:
             await page.wait_for_timeout(10000)
 
-        # Extraction directe via sélecteurs Angular
-        price_ints = await page.locator(".homeinternet-price__integer").all_inner_texts()
-        price_decs = await page.locator(".homeinternet-price__decimal").all_inner_texts()
-        speeds_raw  = await page.locator(".plans-tile__speed-item-count").all_inner_texts()
-
-        # Vitesses groupées par paire (download, upload) — prendre les index pairs
-        downloads = speeds_raw[::2] if speeds_raw else []
-
+        # Extraction par carte — garantit prix et vitesse du MÊME forfait
+        cards = await page.locator(".new-internet-package").all()
         plans: list[dict] = []
-        for i, pi in enumerate(price_ints):
-            pd  = price_decs[i] if i < len(price_decs) else "0"
-            spd = downloads[i]  if i < len(downloads)  else ""
 
-            # Reconstruire le prix
-            int_part = re.sub(r"[^\d]", "", pi)
-            dec_part = re.sub(r"[^\d]", "", pd)
-            if not int_part:
-                continue
+        for card in cards:
             try:
+                # Prix entier
+                pi_els = await card.locator(".homeinternet-price__integer").all_inner_texts()
+                pd_els = await card.locator(".homeinternet-price__decimal").all_inner_texts()
+                sp_els = await card.locator(".plans-tile__speed-item-count").all_inner_texts()
+
+                if not pi_els:
+                    continue
+
+                int_part = re.sub(r"[^\d]", "", pi_els[0])
+                dec_part = re.sub(r"[^\d]", "", pd_els[0]) if pd_els else "0"
+                if not int_part:
+                    continue
                 price = float(f"{int_part}.{dec_part}" if dec_part else int_part)
-            except ValueError:
+
+                # Première vitesse = download
+                speed_val = None
+                if sp_els:
+                    raw_spd = re.sub(r"[^\d]", "", sp_els[0])
+                    if raw_spd:
+                        speed_val = int(raw_spd)
+
+                if 25 < price < 250 and speed_val and 20 <= speed_val <= 1000:
+                    plans.append({"speed_down": speed_val, "price": price,
+                                   "plan": f"{speed_val} Mbps"})
+            except Exception:
                 continue
-
-            speed_val = None
-            if spd:
-                try:
-                    speed_val = int(re.sub(r"[^\d]", "", spd))
-                except ValueError:
-                    pass
-
-            if 25 < price < 250 and speed_val and 20 <= speed_val <= 5000:
-                plans.append({"speed_down": speed_val, "price": price,
-                               "plan": f"{speed_val} Mbps"})
 
         if plans:
             return select_plan(plans)
@@ -519,8 +554,11 @@ async def scrape_fizz_pw(page) -> dict | None:
 
 async def scrape_startca_pw(page) -> dict | None:
     """
-    Start.ca — les prix dépendent de la localisation.
-    On entre le code postal H3A 1A1 (Montréal) pour débloquer les plans.
+    Start.ca — pricing peut dépendre de la localisation.
+    Stratégie :
+    1. Charge la page et intercepte les API calls dès le départ
+    2. Tente une saisie de code postal si aucun plan n'est trouvé
+    3. Parse le DOM / scripts inline en dernier recours
     """
     URL = "https://www.start.ca/services/high-speed-internet"
     POSTAL = "H3A 1A1"
@@ -542,10 +580,16 @@ async def scrape_startca_pw(page) -> dict | None:
     page.on("response", on_start_response)
 
     try:
-        await page.goto(URL, timeout=40000, wait_until="domcontentloaded")
-        await page.wait_for_timeout(3000)
+        await page.goto(URL, timeout=40000, wait_until="networkidle")
+        await page.wait_for_timeout(2000)
 
-        # Cherche le champ de saisie du code postal
+        # Si des plans ont déjà été capturés via API interception, on s'arrête là
+        if start_captured:
+            result = select_plan(start_captured)
+            if result:
+                return result
+
+        # Cherche le champ de saisie du code postal avec timeout court
         postal_selectors = [
             "input[name*='postal' i]",
             "input[name*='address' i]",
@@ -553,49 +597,20 @@ async def scrape_startca_pw(page) -> dict | None:
             "input[placeholder*='address' i]",
             "input[placeholder*='code' i]",
             "#postal", "#postalCode", "#postal_code", "#address",
-            "input[type='text'][id*='postal' i]",
-            "input[type='text'][id*='address' i]",
         ]
-
-        postal_input = None
         for sel in postal_selectors:
             try:
                 el = page.locator(sel).first
-                if await el.count() > 0:
-                    postal_input = el
+                cnt = await el.count()
+                if cnt > 0:
+                    await el.fill(POSTAL, timeout=5000)
+                    await page.wait_for_timeout(500)
+                    # Soumettre via Enter (évite les timeouts de bouton)
+                    await el.press("Enter")
+                    await page.wait_for_timeout(5000)
                     break
             except Exception:
-                pass
-
-        if postal_input:
-            await postal_input.click()
-            await postal_input.fill(POSTAL)
-            await page.wait_for_timeout(500)
-
-            # Cherche le bouton de validation
-            submitted = False
-            for sel in [
-                "button[type='submit']",
-                "button:has-text('Check')",
-                "button:has-text('Search')",
-                "button:has-text('Go')",
-                "button:has-text('Verify')",
-                "[class*='submit' i]",
-                "[class*='check' i]",
-            ]:
-                try:
-                    btn = page.locator(sel).first
-                    if await btn.count() > 0:
-                        await btn.click()
-                        submitted = True
-                        break
-                except Exception:
-                    pass
-
-            if not submitted:
-                await postal_input.press("Enter")
-
-            await page.wait_for_timeout(6000)
+                continue
 
         if start_captured:
             result = select_plan(start_captured)
