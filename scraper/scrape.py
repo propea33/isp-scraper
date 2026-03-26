@@ -11,8 +11,8 @@ Internet (7 fournisseurs) — Playwright headless pour tous :
   - Bell       : Playwright stealth + interception API (Cloudflare)
   - Cogeco     : Playwright stealth + interception API (Cloudflare)
   - EBOX       : Playwright + attente rendu Drupal
-  - VMedia     : Playwright + sélecteurs Angular connus
-  - Fizz       : Playwright + interception API dce.fizz.ca
+  - VMedia     : Playwright + sélecteurs Angular par carte
+  - Fizz       : Playwright + page.evaluate() éléments visibles uniquement
   - Start.ca   : Playwright + saisie code postal Montréal
 
 Cellulaire :
@@ -28,6 +28,7 @@ import os
 import re
 import sys
 import datetime
+from dataclasses import dataclass, field
 
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright, TimeoutError as PWTimeout
@@ -37,6 +38,86 @@ from playwright.async_api import async_playwright, TimeoutError as PWTimeout
 # ──────────────────────────────────────────────────────────────────────────────
 OUTPUT_PATH      = os.path.join(os.path.dirname(__file__), "..", "data", "isp-prices.json")
 CELL_OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "cell-prices.json")
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  DATACLASS — plan normalisé
+# ──────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class ISPPlan:
+    provider: str
+    speed_down: int
+    speed_up: int
+    price: float
+    is_promo: bool = False
+    promo_note: str = ""
+    source: str = ""        # "dom", "json_ld", "api", "next_data", "text"
+    url: str = ""
+    raw_meta: dict = field(default_factory=dict)
+    scraped_ok: bool = True
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  CONFIG PAR FAI
+# ──────────────────────────────────────────────────────────────────────────────
+
+PROVIDER_CONFIG: dict[str, dict] = {
+    "Vidéotron": {
+        "min_speed_mbps":       100,
+        "preferred_speed_mbps": 400,
+        "ignore_keywords":      [],
+        "max_price_delta_pct":  25,
+    },
+    "Bell": {
+        "min_speed_mbps":       100,
+        "preferred_speed_mbps": 500,
+        "ignore_keywords":      [],
+        "max_price_delta_pct":  25,
+    },
+    "Cogeco": {
+        "min_speed_mbps":       100,
+        "preferred_speed_mbps": 400,
+        "ignore_keywords":      [],
+        "max_price_delta_pct":  25,
+    },
+    "Fizz": {
+        "min_speed_mbps":       100,
+        "preferred_speed_mbps": 200,
+        "ignore_keywords":      [
+            "bundle", "promo", "save", "économisez",
+            "was", "était", "mobile", "cell",
+        ],
+        "selector_container":   "#internetPlanCards",
+        "prefer_source":        "dom",   # NEVER use internal API
+        "max_price_delta_pct":  20,
+    },
+    "EBOX": {
+        "min_speed_mbps":       50,
+        "preferred_speed_mbps": 120,
+        "ignore_keywords":      [],
+        "max_price_delta_pct":  25,
+    },
+    "VMedia": {
+        "min_speed_mbps":       50,
+        "preferred_speed_mbps": 300,
+        "ignore_keywords":      [],
+        "max_price_delta_pct":  25,
+    },
+    "Start.ca": {
+        "min_speed_mbps":       50,
+        "preferred_speed_mbps": 200,
+        "ignore_keywords":      [],
+        "max_price_delta_pct":  25,
+    },
+}
+
+_DEFAULT_CFG: dict = {
+    "min_speed_mbps":       50,
+    "preferred_speed_mbps": 200,
+    "ignore_keywords":      [],
+    "max_price_delta_pct":  30,
+}
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  FALLBACK INTERNET — utilisé si tout échoue et pas de JSON existant
@@ -85,7 +166,82 @@ USER_AGENT = (
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  HELPERS — extraction et sélection de plans
+#  SÉLECTION & SANITY — logique centralisée
+# ──────────────────────────────────────────────────────────────────────────────
+
+def select_plan_for_provider(provider: str, plans: list[ISPPlan]) -> ISPPlan | None:
+    """
+    Choisit le meilleur plan pour un FAI donné en appliquant PROVIDER_CONFIG :
+    1. Filtre les plans dont context_text contient un mot de ignore_keywords.
+    2. Préfère les plans à preferred_speed_mbps, puis min_speed_mbps.
+    3. Retourne le moins cher parmi les plans retenus.
+    """
+    if not plans:
+        return None
+
+    cfg      = PROVIDER_CONFIG.get(provider, _DEFAULT_CFG)
+    ignore   = [kw.lower() for kw in cfg.get("ignore_keywords", [])]
+    preferred = cfg.get("preferred_speed_mbps", 200)
+    min_spd   = cfg.get("min_speed_mbps", 50)
+
+    # Filtre ignore_keywords
+    filtered: list[ISPPlan] = []
+    for p in plans:
+        ctx = p.raw_meta.get("context_text", "").lower()
+        if ignore and any(kw in ctx for kw in ignore):
+            continue
+        filtered.append(p)
+
+    # Si tout a été filtré, on garde l'original (défense-en-profondeur)
+    if not filtered:
+        filtered = plans
+
+    # Filtre prix raisonnable
+    filtered = [p for p in filtered if 25 < p.price < 250]
+    if not filtered:
+        return None
+
+    # Plans à la vitesse préférée ou plus
+    fast = [p for p in filtered if p.speed_down >= preferred]
+    if fast:
+        return min(fast, key=lambda p: p.price)
+
+    # Plans au-dessus de la vitesse minimale
+    ok = [p for p in filtered if p.speed_down >= min_spd]
+    if ok:
+        return min(ok, key=lambda p: p.price)
+
+    return min(filtered, key=lambda p: p.price)
+
+
+def check_price_sanity(provider: str, new_plan: ISPPlan, prev_prices: dict) -> bool:
+    """
+    Retourne False si le nouveau prix s'écarte de plus de max_price_delta_pct
+    par rapport au prix précédent enregistré.
+    """
+    cfg       = PROVIDER_CONFIG.get(provider, _DEFAULT_CFG)
+    max_delta = cfg.get("max_price_delta_pct", 30)
+
+    if provider not in prev_prices:
+        return True
+
+    prev_price = prev_prices[provider].get("price", 0)
+    if prev_price <= 0:
+        return True
+
+    delta_pct = abs(new_plan.price - prev_price) / prev_price * 100
+    if delta_pct > max_delta:
+        print(
+            f"    ⚠ {provider}: sanity check — "
+            f"${new_plan.price:.2f} vs précédent ${prev_price:.2f} "
+            f"({delta_pct:.1f}% > {max_delta}%)"
+        )
+        return False
+    return True
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  HELPERS — extraction texte/json
 # ──────────────────────────────────────────────────────────────────────────────
 
 def extract_price(text: str) -> float | None:
@@ -122,7 +278,6 @@ def plans_from_text(text: str) -> list[dict]:
     """
     plans = []
 
-    # Pattern 1 : vitesse puis prix (max 300 chars d'écart)
     for m in re.finditer(
         r"(\d{2,4})\s*Mbps.{0,300}?\$\s*(\d{2,3}(?:\.\d{1,2})?)",
         text, re.S | re.I
@@ -131,7 +286,6 @@ def plans_from_text(text: str) -> list[dict]:
         if 20 <= speed <= 5000 and 25 < price < 250:
             plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
 
-    # Pattern 2 : prix puis vitesse
     for m in re.finditer(
         r"\$\s*(\d{2,3}(?:\.\d{1,2})?).{0,300}?(\d{2,4})\s*Mbps",
         text, re.S | re.I
@@ -140,7 +294,6 @@ def plans_from_text(text: str) -> list[dict]:
         if 20 <= speed <= 5000 and 25 < price < 250:
             plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
 
-    # Pattern 3 : Gbps
     for m in re.finditer(
         r"(\d(?:\.\d)?)\s*Gbps.{0,300}?\$\s*(\d{2,3}(?:\.\d{1,2})?)",
         text, re.S | re.I
@@ -150,7 +303,6 @@ def plans_from_text(text: str) -> list[dict]:
         if 100 <= speed <= 10000 and 25 < price < 250:
             plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
 
-    # Dédoublonnage
     seen: set = set()
     unique = []
     for p in plans:
@@ -164,11 +316,9 @@ def plans_from_text(text: str) -> list[dict]:
 def plans_from_json(json_text: str) -> list[dict]:
     """
     Extrait des plans depuis le texte d'une réponse JSON / script inline.
-    Cherche des champs 'speed/download' co-localisés avec 'price/amount'.
     """
     plans = []
 
-    # Champ vitesse numérique
     for m in re.finditer(
         r'"(?:speed_down|download|downloadSpeed|speed|bandwidth|megabits|download_speed)"\s*:\s*"?(\d+)"?',
         json_text, re.I
@@ -185,7 +335,6 @@ def plans_from_json(json_text: str) -> list[dict]:
             if 25 < price < 250:
                 plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
 
-    # Champ vitesse sous forme "400 Mbps"
     for m in re.finditer(r'"(\d{2,4})\s*[Mm]bps"', json_text):
         speed = int(m.group(1))
         if not (20 <= speed <= 5000):
@@ -196,7 +345,6 @@ def plans_from_json(json_text: str) -> list[dict]:
             if 25 < price < 250:
                 plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
 
-    # Dédoublonnage
     seen: set = set()
     unique = []
     for p in plans:
@@ -207,16 +355,56 @@ def plans_from_json(json_text: str) -> list[dict]:
     return unique
 
 
-def select_plan(plans: list[dict]) -> dict | None:
+def plans_from_displayed_price(text: str) -> list[dict]:
     """
-    Choisit le meilleur plan pour la comparaison :
-    le moins cher parmi ceux avec >= 200 Mbps,
-    sinon le moins cher disponible.
+    Extrait les plans en cherchant UNIQUEMENT les prix accompagnés de '/month'
+    ou '/mois' — ce qui correspond au prix final affiché à l'utilisateur,
+    pas au prix interne de l'API.
     """
-    if not plans:
-        return None
-    fast = sorted([p for p in plans if p["speed_down"] >= 200], key=lambda p: p["price"])
-    return fast[0] if fast else min(plans, key=lambda p: p["price"])
+    plans = []
+    for m in re.finditer(
+        r"(\d{2,4})\s*Mbps.{0,400}?\$\s*(\d{2,3}(?:\.\d{1,2})?)\s*/\s*(?:month|mois)",
+        text, re.S | re.I
+    ):
+        speed, price = int(m.group(1)), float(m.group(2))
+        if 20 <= speed <= 5000 and 25 < price < 250:
+            plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
+    for m in re.finditer(
+        r"\$\s*(\d{2,3}(?:\.\d{1,2})?)\s*/\s*(?:month|mois).{0,400}?(\d{2,4})\s*Mbps",
+        text, re.S | re.I
+    ):
+        price, speed = float(m.group(1)), int(m.group(2))
+        if 20 <= speed <= 5000 and 25 < price < 250:
+            plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
+    seen: set = set()
+    unique = []
+    for p in plans:
+        k = (p["speed_down"], round(p["price"]))
+        if k not in seen:
+            seen.add(k)
+            unique.append(p)
+    return unique
+
+
+# Kept for backward compatibility (used in old tests)
+_plans_from_displayed_price = plans_from_displayed_price
+
+
+def _dicts_to_isplans(provider: str, url: str, dicts: list[dict],
+                      source: str = "text", context_text: str = "") -> list[ISPPlan]:
+    """Convertit une liste de dicts (speed_down, price) en ISPPlan."""
+    return [
+        ISPPlan(
+            provider=provider,
+            speed_down=d["speed_down"],
+            speed_up=0,
+            price=d["price"],
+            source=source,
+            url=url,
+            raw_meta={"context_text": context_text.lower()},
+        )
+        for d in dicts
+    ]
 
 
 def load_previous_prices() -> dict:
@@ -279,65 +467,51 @@ async def _navigate_and_intercept(page, url: str, extra_wait_ms: int = 0) -> lis
     return captured
 
 
-async def _dom_fallback(page) -> dict | None:
+async def _dom_fallback_dicts(page) -> list[dict]:
     """
     Fallback : extrait les plans depuis le DOM rendu et les scripts inline.
+    Retourne list[dict] (speed_down, price).
     """
     try:
         content = await page.content()
         soup = BeautifulSoup(content, "lxml")
 
-        # Scripts inline (Next.js, Nuxt, Drupal drupal-settings, etc.)
         for script in soup.find_all("script"):
             raw = script.string or ""
             if not raw or len(raw) < 50:
                 continue
             found = plans_from_json(raw)
             if found:
-                result = select_plan(found)
-                if result:
-                    return result
+                return found
 
-        # Texte complet de la page
         text = soup.get_text(" ")
-        plans = plans_from_text(text)
-        return select_plan(plans)
+        return plans_from_text(text)
 
     except Exception:
-        return None
+        return []
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  SCRAPERS INTERNET — un par fournisseur
+#  SCRAPERS INTERNET — retournent list[ISPPlan]
 # ──────────────────────────────────────────────────────────────────────────────
 
-async def scrape_videotron_pw(page) -> dict | None:
-    """
-    Vidéotron — Next.js/React SPA.
-    Cherche d'abord __NEXT_DATA__ (données SSR injectées dans la page),
-    puis intercepte les appels API, puis parse le DOM.
-    """
+async def scrape_videotron_pw(page) -> list[ISPPlan]:
+    """Vidéotron — Next.js/React SPA."""
     URL = "https://www.videotron.com/en/internet"
     try:
         captured = await _navigate_and_intercept(page, URL)
         if captured:
-            result = select_plan(captured)
-            if result:
-                return result
+            return _dicts_to_isplans("Vidéotron", URL, captured, source="api")
 
         content = await page.content()
         soup = BeautifulSoup(content, "lxml")
 
-        # Next.js injecte toutes les données dans <script id="__NEXT_DATA__">
         next_data = soup.find("script", {"id": "__NEXT_DATA__"})
         if next_data and next_data.string:
             found = plans_from_json(next_data.string)
             if found:
-                result = select_plan(found)
-                if result:
-                    return result
+                return _dicts_to_isplans("Vidéotron", URL, found, source="next_data")
 
-        # Cherche aussi window.__STATE__ ou window.__INITIAL_STATE__
         for script in soup.find_all("script"):
             raw = script.string or ""
             if not raw or len(raw) < 100:
@@ -346,68 +520,55 @@ async def scrape_videotron_pw(page) -> dict | None:
                 continue
             found = plans_from_json(raw)
             if found:
-                result = select_plan(found)
-                if result:
-                    return result
+                return _dicts_to_isplans("Vidéotron", URL, found, source="json_ld")
 
-        # Texte de la page rendue
         text = soup.get_text(" ")
-        plans = plans_from_text(text)
-        return select_plan(plans)
+        return _dicts_to_isplans("Vidéotron", URL, plans_from_text(text), source="text")
 
     except Exception as e:
         print(f"    videotron error: {e}")
-    return None
+    return []
 
 
-async def scrape_bell_pw(page) -> dict | None:
+async def scrape_bell_pw(page) -> list[ISPPlan]:
     """Bell — Cloudflare avancé. Stealth + interception API + DOM."""
     URL = "https://www.bell.ca/Bell_Internet/Internet_access"
     try:
         captured = await _navigate_and_intercept(page, URL, extra_wait_ms=5000)
         if captured:
-            result = select_plan(captured)
-            if result:
-                return result
-        return await _dom_fallback(page)
+            return _dicts_to_isplans("Bell", URL, captured, source="api")
+        fallback = await _dom_fallback_dicts(page)
+        return _dicts_to_isplans("Bell", URL, fallback, source="text")
     except Exception as e:
         print(f"    bell error: {e}")
-    return None
+    return []
 
 
-async def scrape_cogeco_pw(page) -> dict | None:
+async def scrape_cogeco_pw(page) -> list[ISPPlan]:
     """Cogeco — Cloudflare. Stealth + interception API + DOM."""
     URL = "https://www.cogeco.ca/en/internet/packages"
     try:
         captured = await _navigate_and_intercept(page, URL, extra_wait_ms=5000)
         if captured:
-            result = select_plan(captured)
-            if result:
-                return result
-        return await _dom_fallback(page)
+            return _dicts_to_isplans("Cogeco", URL, captured, source="api")
+        fallback = await _dom_fallback_dicts(page)
+        return _dicts_to_isplans("Cogeco", URL, fallback, source="text")
     except Exception as e:
         print(f"    cogeco error: {e}")
-    return None
+    return []
 
 
-async def scrape_ebox_pw(page) -> dict | None:
-    """
-    EBOX — Drupal/WordPress.
-    La page charge les plans via JS avec qualification par adresse.
-    On essaie d'abord l'interception API, puis le DOM rendu.
-    """
+async def scrape_ebox_pw(page) -> list[ISPPlan]:
+    """EBOX — Drupal/WordPress."""
     URL = "https://www.ebox.ca/en/quebec/residential/internet-packages/"
     try:
         captured = await _navigate_and_intercept(page, URL)
         if captured:
-            result = select_plan(captured)
-            if result:
-                return result
+            return _dicts_to_isplans("EBOX", URL, captured, source="api")
 
         content = await page.content()
         soup = BeautifulSoup(content, "lxml")
 
-        # eBox utilise data-speed et data-price sur certains éléments
         plans: list[dict] = []
         for el in soup.find_all(attrs={"data-speed": True}):
             speed = extract_speed_mbps(str(el.get("data-speed", "")) + " Mbps")
@@ -416,45 +577,36 @@ async def scrape_ebox_pw(page) -> dict | None:
                 plans.append({"speed_down": speed, "price": price, "plan": f"Internet {speed}"})
 
         if plans:
-            return select_plan(plans)
+            return _dicts_to_isplans("EBOX", URL, plans, source="dom")
 
-        return await _dom_fallback(page)
+        fallback = await _dom_fallback_dicts(page)
+        return _dicts_to_isplans("EBOX", URL, fallback, source="text")
 
     except Exception as e:
         print(f"    ebox error: {e}")
-    return None
+    return []
 
 
-async def scrape_vmedia_pw(page) -> dict | None:
+async def scrape_vmedia_pw(page) -> list[ISPPlan]:
     """
     VMedia — Angular.js.
     Extraction par carte (.new-internet-package) pour garantir l'appariement
-    prix ↔ vitesse. On ne prend pas les éléments globalement pour éviter
-    les décalages d'index.
-
-    Sélecteurs Angular confirmés :
-      .new-internet-package         → carte complète d'un forfait
-      .homeinternet-price__integer  → partie entière du prix
-      .homeinternet-price__decimal  → partie décimale du prix
-      .plans-tile__speed-item-count → vitesses (1re = download, 2e = upload)
+    prix ↔ vitesse.
     """
     URL = "https://www.vmedia.ca/en/homeinternet"
     try:
         await page.goto(URL, timeout=40000, wait_until="domcontentloaded")
 
-        # Attente qu'Angular rende les cartes
         try:
             await page.wait_for_selector(".new-internet-package", timeout=15000)
         except PWTimeout:
             await page.wait_for_timeout(10000)
 
-        # Extraction par carte — garantit prix et vitesse du MÊME forfait
         cards = await page.locator(".new-internet-package").all()
-        plans: list[dict] = []
+        plans: list[ISPPlan] = []
 
         for card in cards:
             try:
-                # Prix entier
                 pi_els = await card.locator(".homeinternet-price__integer").all_inner_texts()
                 pd_els = await card.locator(".homeinternet-price__decimal").all_inner_texts()
                 sp_els = await card.locator(".plans-tile__speed-item-count").all_inner_texts()
@@ -468,7 +620,6 @@ async def scrape_vmedia_pw(page) -> dict | None:
                     continue
                 price = float(f"{int_part}.{dec_part}" if dec_part else int_part)
 
-                # Première vitesse = download
                 speed_val = None
                 if sp_els:
                     raw_spd = re.sub(r"[^\d]", "", sp_els[0])
@@ -476,68 +627,44 @@ async def scrape_vmedia_pw(page) -> dict | None:
                         speed_val = int(raw_spd)
 
                 if 25 < price < 250 and speed_val and 20 <= speed_val <= 1000:
-                    plans.append({"speed_down": speed_val, "price": price,
-                                   "plan": f"{speed_val} Mbps"})
+                    plans.append(ISPPlan(
+                        provider="VMedia",
+                        speed_down=speed_val,
+                        speed_up=0,
+                        price=price,
+                        source="dom",
+                        url=URL,
+                    ))
             except Exception:
                 continue
 
         if plans:
-            return select_plan(plans)
+            return plans
 
-        return await _dom_fallback(page)
+        fallback = await _dom_fallback_dicts(page)
+        return _dicts_to_isplans("VMedia", URL, fallback, source="text")
 
     except Exception as e:
         print(f"    vmedia error: {e}")
-    return None
+    return []
 
 
-def _plans_from_displayed_price(text: str) -> list[dict]:
-    """
-    Extrait les plans en cherchant UNIQUEMENT les prix accompagnés de '/month'
-    ou '/mois' — ce qui correspond au prix final affiché à l'utilisateur,
-    pas au prix interne de l'API.
-    """
-    plans = []
-    # Pattern 1 : "200 Mbps ... $49.00 /month"
-    for m in re.finditer(
-        r"(\d{2,4})\s*Mbps.{0,400}?\$\s*(\d{2,3}(?:\.\d{1,2})?)\s*/\s*(?:month|mois)",
-        text, re.S | re.I
-    ):
-        speed, price = int(m.group(1)), float(m.group(2))
-        if 20 <= speed <= 5000 and 25 < price < 250:
-            plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
-    # Pattern 2 : "$49.00 /month ... 200 Mbps"
-    for m in re.finditer(
-        r"\$\s*(\d{2,3}(?:\.\d{1,2})?)\s*/\s*(?:month|mois).{0,400}?(\d{2,4})\s*Mbps",
-        text, re.S | re.I
-    ):
-        price, speed = float(m.group(1)), int(m.group(2))
-        if 20 <= speed <= 5000 and 25 < price < 250:
-            plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
-    # Dédoublonnage
-    seen: set = set()
-    unique = []
-    for p in plans:
-        k = (p["speed_down"], round(p["price"]))
-        if k not in seen:
-            seen.add(k)
-            unique.append(p)
-    return unique
-
-
-async def scrape_fizz_pw(page) -> dict | None:
+async def scrape_fizz_pw(page) -> list[ISPPlan]:
     """
     Fizz — Drupal, injecte les plans via JS dans #internetPlanCards.
 
     IMPORTANT : l'API interne (dce.fizz.ca) retourne un prix de BASE ($45)
-    qui diffère du prix affiché à l'utilisateur ($49). On lit donc le prix
-    directement sur la page rendue avec le pattern strict '$XX /month'.
+    qui diffère du prix affiché à l'utilisateur ($49 pour 200 Mbps).
+    On lit UNIQUEMENT le texte des éléments visibles dans le DOM, jamais l'API.
+
+    Pour chaque carte de plan, on associe le prix ET le contexte textuel
+    de cette carte — ce qui permet à select_plan_for_provider() de filtrer
+    les promotions via ignore_keywords.
     """
     URL = "https://fizz.ca/en/internet"
     try:
         await page.goto(URL, timeout=45000, wait_until="domcontentloaded")
 
-        # Attente que Drupal injecte les cartes de plans
         try:
             await page.wait_for_selector(
                 "#internetPlanCards > *, #internetPlanCards .card, "
@@ -547,28 +674,71 @@ async def scrape_fizz_pw(page) -> dict | None:
         except PWTimeout:
             await page.wait_for_timeout(10000)
 
+        # Extrait le texte de chaque carte de plan visible individuellement
+        card_texts: list[str] = await page.evaluate("""() => {
+            const container = document.querySelector('#internetPlanCards');
+            if (!container) return [document.body.innerText || ''];
+
+            // Essaie de trouver des sous-cartes
+            const selectors = [
+                '[class*="plan"]', '[class*="card"]', '[class*="package"]',
+                'article', '[data-plan]'
+            ];
+            for (const sel of selectors) {
+                const cards = Array.from(container.querySelectorAll(sel)).filter(el => {
+                    const s = window.getComputedStyle(el);
+                    return s.display !== 'none' && s.visibility !== 'hidden' && s.opacity !== '0';
+                });
+                if (cards.length >= 2) {
+                    return cards.map(el => el.innerText || el.textContent || '');
+                }
+            }
+
+            // Fallback : texte du container complet
+            return [container.innerText || container.textContent || ''];
+        }""")
+
+        plans: list[ISPPlan] = []
+        for card_text in card_texts:
+            if not card_text.strip():
+                continue
+            # Priorité : patterns avec "/month" ou "/mois" (prix utilisateur final)
+            dicts = plans_from_displayed_price(card_text)
+            if not dicts:
+                dicts = plans_from_text(card_text)
+            for d in dicts:
+                plans.append(ISPPlan(
+                    provider="Fizz",
+                    speed_down=d["speed_down"],
+                    speed_up=0,
+                    price=d["price"],
+                    source="dom",
+                    url=URL,
+                    raw_meta={"context_text": card_text.lower()},
+                ))
+
+        if plans:
+            return plans
+
+        # Dernier recours : texte complet de la page (sans filtrage de visibilité)
         content = await page.content()
         soup = BeautifulSoup(content, "lxml")
-
-        # Cherche d'abord dans le container #internetPlanCards
         container = soup.find(id="internetPlanCards")
-        search_text = container.get_text(" ") if (container and container.get_text(strip=True)) else soup.get_text(" ")
-
-        # Priorité : prix affichés avec "/month" (prix utilisateur final)
-        plans = _plans_from_displayed_price(search_text)
-        if plans:
-            return select_plan(plans)
-
-        # Fallback générique
-        plans = plans_from_text(search_text)
-        return select_plan(plans)
+        search_text = (
+            container.get_text(" ")
+            if (container and container.get_text(strip=True))
+            else soup.get_text(" ")
+        )
+        dicts = plans_from_displayed_price(search_text) or plans_from_text(search_text)
+        return _dicts_to_isplans("Fizz", URL, dicts, source="text",
+                                 context_text=search_text)
 
     except Exception as e:
         print(f"    fizz error: {e}")
-    return None
+    return []
 
 
-async def scrape_startca_pw(page) -> dict | None:
+async def scrape_startca_pw(page) -> list[ISPPlan]:
     """
     Start.ca — pricing peut dépendre de la localisation.
     Stratégie :
@@ -599,13 +769,9 @@ async def scrape_startca_pw(page) -> dict | None:
         await page.goto(URL, timeout=40000, wait_until="networkidle")
         await page.wait_for_timeout(2000)
 
-        # Si des plans ont déjà été capturés via API interception, on s'arrête là
         if start_captured:
-            result = select_plan(start_captured)
-            if result:
-                return result
+            return _dicts_to_isplans("Start.ca", URL, start_captured, source="api")
 
-        # Cherche le champ de saisie du code postal avec timeout court
         postal_selectors = [
             "input[name*='postal' i]",
             "input[name*='address' i]",
@@ -621,7 +787,6 @@ async def scrape_startca_pw(page) -> dict | None:
                 if cnt > 0:
                     await el.fill(POSTAL, timeout=5000)
                     await page.wait_for_timeout(500)
-                    # Soumettre via Enter (évite les timeouts de bouton)
                     await el.press("Enter")
                     await page.wait_for_timeout(5000)
                     break
@@ -629,15 +794,14 @@ async def scrape_startca_pw(page) -> dict | None:
                 continue
 
         if start_captured:
-            result = select_plan(start_captured)
-            if result:
-                return result
+            return _dicts_to_isplans("Start.ca", URL, start_captured, source="api")
 
-        return await _dom_fallback(page)
+        fallback = await _dom_fallback_dicts(page)
+        return _dicts_to_isplans("Start.ca", URL, fallback, source="text")
 
     except Exception as e:
         print(f"    startca error: {e}")
-    return None
+    return []
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -689,30 +853,37 @@ async def run_all_scrapers() -> tuple[list, int, int]:
         for provider, scrape_fn, conn_type, note, url in ISP_SCRAPERS:
             fb = next((f for f in FALLBACK if f["provider"] == provider), {})
             page = await context.new_page()
-            result = None
+            plans: list[ISPPlan] = []
             try:
-                result = await scrape_fn(page)
+                plans = await scrape_fn(page)
             except Exception as e:
                 print(f"    {provider} exception: {e}")
             finally:
                 await page.close()
 
-            if result and result.get("price") and result.get("speed_down"):
+            selected = select_plan_for_provider(provider, plans)
+
+            # Sanity check — rejette les variations de prix anormales
+            if selected and not check_price_sanity(provider, selected, prev):
+                selected = None  # Force fallback
+
+            if selected:
                 entry = {
                     **fb,
-                    "plan":       result.get("plan", f"{result['speed_down']} Mbps"),
-                    "speed_down": result["speed_down"],
-                    "price":      result["price"],
+                    "plan":       f"{selected.speed_down} Mbps",
+                    "speed_down": selected.speed_down,
+                    "speed_up":   selected.speed_up,
+                    "price":      selected.price,
                     "type":       conn_type,
                     "note":       note,
                     "url":        url,
                     "scraped_ok": True,
-                    "promo":      result.get("promo", False),
-                    "promo_note": result.get("promo_note", ""),
+                    "promo":      selected.is_promo,
+                    "promo_note": selected.promo_note,
                 }
                 results.append(entry)
                 scraped_count += 1
-                log("✓", provider, f"{result['speed_down']} Mbps — ${result['price']:.2f}/mois")
+                log("✓", provider, f"{selected.speed_down} Mbps — ${selected.price:.2f}/mois")
             else:
                 if provider in prev:
                     entry = {**prev[provider], "scraped_ok": False}
