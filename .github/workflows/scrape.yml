@@ -1,0 +1,61 @@
+name: 🔍 Scrape ISP Prices
+
+on:
+  # Tous les jours à 6h00 heure de Montréal (10h00 UTC en été, 11h00 UTC en hiver)
+  schedule:
+    - cron: '0 10 * * *'
+
+  # Permet de lancer manuellement depuis l'onglet "Actions" de GitHub
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    name: Scrape & Commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: write   # Nécessaire pour git push
+
+    steps:
+      # ── 1. Récupérer le code ──────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Python ────────────────────────────────────────────────────────
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # ── 3. Dépendances Python ────────────────────────────────────────────
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      # ── 4. Playwright — Chromium seulement (plus léger) ──────────────────
+      - name: Install Playwright Chromium
+        run: |
+          playwright install chromium
+          playwright install-deps chromium
+
+      # ── 5. Scraping ──────────────────────────────────────────────────────
+      - name: Run scraper
+        run: python scraper/scrape.py
+        # Continue même si le scraper retourne exit code 1 (que des fallbacks)
+        continue-on-error: true
+
+      # ── 6. Commit si le JSON a changé ────────────────────────────────────
+      - name: Commit updated prices
+        run: |
+          git config user.name  "isp-scraper[bot]"
+          git config user.email "actions@github.com"
+          git add data/isp-prices.json
+          # Ne commit que si le fichier a vraiment changé
+          if git diff --staged --quiet; then
+            echo "Aucun changement dans isp-prices.json — pas de commit."
+          else
+            git commit -m "chore: update ISP prices $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git push
+            echo "✅ Commit et push effectués."
+          fi
