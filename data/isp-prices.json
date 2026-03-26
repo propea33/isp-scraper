@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-03-26T12:52:43Z",
-  "scraped_count": 4,
-  "fallback_count": 3,
+  "updated_at": "2026-03-26T13:00:13Z",
+  "scraped_count": 3,
+  "fallback_count": 4,
   "region": "quebec",
   "plans": [
     {
@@ -28,7 +28,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.bell.ca/Bell_Internet/Internet_access",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "VMedia",
