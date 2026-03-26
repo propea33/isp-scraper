@@ -886,7 +886,7 @@ async def run_all_scrapers() -> tuple[list, int, int]:
                 log("✓", provider, f"{selected.speed_down} Mbps — ${selected.price:.2f}/mois")
             else:
                 if provider in prev:
-                    entry = {**prev[provider], "scraped_ok": False}
+                    entry = {**prev[provider], "url": url, "scraped_ok": False}
                     log("↩", provider, f"échec → prix précédent (${prev[provider]['price']:.2f})")
                 else:
                     entry = {**fb, "scraped_ok": False}
