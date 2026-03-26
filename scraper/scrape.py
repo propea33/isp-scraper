@@ -491,61 +491,77 @@ async def scrape_vmedia_pw(page) -> dict | None:
     return None
 
 
+def _plans_from_displayed_price(text: str) -> list[dict]:
+    """
+    Extrait les plans en cherchant UNIQUEMENT les prix accompagnés de '/month'
+    ou '/mois' — ce qui correspond au prix final affiché à l'utilisateur,
+    pas au prix interne de l'API.
+    """
+    plans = []
+    # Pattern 1 : "200 Mbps ... $49.00 /month"
+    for m in re.finditer(
+        r"(\d{2,4})\s*Mbps.{0,400}?\$\s*(\d{2,3}(?:\.\d{1,2})?)\s*/\s*(?:month|mois)",
+        text, re.S | re.I
+    ):
+        speed, price = int(m.group(1)), float(m.group(2))
+        if 20 <= speed <= 5000 and 25 < price < 250:
+            plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
+    # Pattern 2 : "$49.00 /month ... 200 Mbps"
+    for m in re.finditer(
+        r"\$\s*(\d{2,3}(?:\.\d{1,2})?)\s*/\s*(?:month|mois).{0,400}?(\d{2,4})\s*Mbps",
+        text, re.S | re.I
+    ):
+        price, speed = float(m.group(1)), int(m.group(2))
+        if 20 <= speed <= 5000 and 25 < price < 250:
+            plans.append({"speed_down": speed, "price": price, "plan": f"{speed} Mbps"})
+    # Dédoublonnage
+    seen: set = set()
+    unique = []
+    for p in plans:
+        k = (p["speed_down"], round(p["price"]))
+        if k not in seen:
+            seen.add(k)
+            unique.append(p)
+    return unique
+
+
 async def scrape_fizz_pw(page) -> dict | None:
     """
-    Fizz — Drupal, injecte les plans via son API dce.fizz.ca.
-    Interception des appels Fizz Commerce Backend + rendu #internetPlanCards.
+    Fizz — Drupal, injecte les plans via JS dans #internetPlanCards.
+
+    IMPORTANT : l'API interne (dce.fizz.ca) retourne un prix de BASE ($45)
+    qui diffère du prix affiché à l'utilisateur ($49). On lit donc le prix
+    directement sur la page rendue avec le pattern strict '$XX /month'.
     """
     URL = "https://fizz.ca/en/internet"
-    fizz_captured: list[dict] = []
-
-    async def on_fizz_response(response):
-        if "fizz.ca" not in response.url.lower():
-            return
-        ct = response.headers.get("content-type", "")
-        if "json" not in ct:
-            return
-        try:
-            body = await response.text()
-            if len(body) < 30:
-                return
-            found = plans_from_json(body)
-            fizz_captured.extend(found)
-        except Exception:
-            pass
-
-    page.on("response", on_fizz_response)
-
     try:
         await page.goto(URL, timeout=45000, wait_until="domcontentloaded")
 
         # Attente que Drupal injecte les cartes de plans
         try:
             await page.wait_for_selector(
-                "#internetPlanCards .card, #internetPlanCards [class*='card'], "
-                "#internetPlanCards [class*='plan'], #internetPlanCards > *",
+                "#internetPlanCards > *, #internetPlanCards .card, "
+                "#internetPlanCards [class*='plan']",
                 timeout=20000
             )
         except PWTimeout:
             await page.wait_for_timeout(10000)
 
-        if fizz_captured:
-            result = select_plan(fizz_captured)
-            if result:
-                return result
-
-        # Parse le container #internetPlanCards rendu
         content = await page.content()
         soup = BeautifulSoup(content, "lxml")
 
+        # Cherche d'abord dans le container #internetPlanCards
         container = soup.find(id="internetPlanCards")
-        if container and container.get_text(strip=True):
-            text = container.get_text(" ")
-            plans = plans_from_text(text)
-            if plans:
-                return select_plan(plans)
+        search_text = container.get_text(" ") if (container and container.get_text(strip=True)) else soup.get_text(" ")
 
-        return await _dom_fallback(page)
+        # Priorité : prix affichés avec "/month" (prix utilisateur final)
+        plans = _plans_from_displayed_price(search_text)
+        if plans:
+            return select_plan(plans)
+
+        # Fallback générique
+        plans = plans_from_text(search_text)
+        return select_plan(plans)
 
     except Exception as e:
         print(f"    fizz error: {e}")
