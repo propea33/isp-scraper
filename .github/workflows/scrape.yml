@@ -35,7 +35,9 @@ jobs:
 
       # ── 4. Playwright — Chromium seulement (plus léger) ──────────────────
       - name: Install Playwright Chromium
-        run: playwright install --with-deps chromium
+        run: |
+          playwright install chromium
+          sudo playwright install-deps chromium
 
       # ── 5. Scraping ──────────────────────────────────────────────────────
       - name: Run scraper
