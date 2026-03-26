@@ -50,7 +50,7 @@ jobs:
         run: |
           git config user.name  "isp-scraper[bot]"
           git config user.email "actions@github.com"
-          git add data/isp-prices.json
+          git add data/isp-prices.json data/cell-prices.json
           # Ne commit que si le fichier a vraiment changé
           if git diff --staged --quiet; then
             echo "Aucun changement dans isp-prices.json — pas de commit."
