@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-03-26T17:32:40Z",
+  "updated_at": "2026-03-26T18:04:44Z",
   "scraped_count": 0,
   "fallback_count": 8,
   "region": "quebec",
@@ -19,7 +19,7 @@
       "price": 65.0,
       "network": "Rogers",
       "plan_name": "20 Go",
-      "url": "https://www.fido.ca/en/phones/plans",
+      "url": "https://www.fido.ca/fr/forfaits",
       "scraped_ok": false
     },
     {
@@ -28,7 +28,7 @@
       "price": 60.0,
       "network": "Telus",
       "plan_name": "15 Go",
-      "url": "https://www.koodomobile.com/en/plans",
+      "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
       "scraped_ok": false
     },
     {
@@ -37,7 +37,7 @@
       "price": 58.0,
       "network": "Vidéotron",
       "plan_name": "15 Go",
-      "url": "https://www.videotron.com/en/mobility/plans",
+      "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
       "scraped_ok": false
     },
     {
@@ -46,7 +46,7 @@
       "price": 55.0,
       "network": "Telus",
       "plan_name": "15 Go",
-      "url": "https://www.publicmobile.ca/en/on/plans",
+      "url": "https://www.publicmobile.ca/en/plans",
       "scraped_ok": false
     },
     {
@@ -55,7 +55,7 @@
       "price": 50.0,
       "network": "Vidéotron",
       "plan_name": "15 Go",
-      "url": "https://fizz.ca/en/cell-plans",
+      "url": "https://fizz.ca/en/mobile",
       "scraped_ok": false
     },
     {
@@ -64,7 +64,7 @@
       "price": 45.0,
       "network": "Bell",
       "plan_name": "15 Go",
-      "url": "https://www.luckymobile.ca/plans",
+      "url": "https://www.luckymobile.ca/shop/plans",
       "scraped_ok": false
     },
     {
