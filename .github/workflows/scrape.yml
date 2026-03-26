@@ -11,7 +11,7 @@ on:
 jobs:
   scrape:
     name: Scrape & Commit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
 
     permissions:
