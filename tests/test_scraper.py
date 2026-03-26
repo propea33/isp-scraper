@@ -10,12 +10,19 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import pytest
 from scraper.scrape import (
     ISPPlan,
+    CellPlan,
     PROVIDER_CONFIG,
+    CELL_PROVIDER_CONFIG,
     plans_from_text,
     plans_from_displayed_price,
     select_plan_for_provider,
     check_price_sanity,
     _dicts_to_isplans,
+    cell_plans_from_text,
+    cell_plans_from_json,
+    select_cell_plan_for_provider,
+    check_cell_price_sanity,
+    _dicts_to_cellplans,
 )
 
 
@@ -251,3 +258,165 @@ def test_provider_config_fizz_has_ignore_keywords():
 def test_provider_config_all_isp_present():
     for provider in ["Vidéotron", "Bell", "Cogeco", "Fizz", "EBOX", "VMedia", "Start.ca"]:
         assert provider in PROVIDER_CONFIG, f"{provider} missing from PROVIDER_CONFIG"
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  cell_plans_from_text
+# ──────────────────────────────────────────────────────────────────────────────
+
+def test_cell_plans_from_text_basic():
+    text = "15 Go de données $45.00 /mois LTE+"
+    plans = cell_plans_from_text(text)
+    assert any(p["data_gb"] == 15 and p["price"] == 45.0 for p in plans)
+
+
+def test_cell_plans_from_text_reverse():
+    text = "$55.00 /month — 20 GB data"
+    plans = cell_plans_from_text(text)
+    assert any(p["data_gb"] == 20 and p["price"] == 55.0 for p in plans)
+
+
+def test_cell_plans_from_text_gb_short_distance():
+    text = "10 Go $35"
+    plans = cell_plans_from_text(text)
+    assert any(p["data_gb"] == 10 and p["price"] == 35.0 for p in plans)
+
+
+def test_cell_plans_from_text_ignores_low_price():
+    text = "5 Go $8/month"
+    plans = cell_plans_from_text(text)
+    assert not any(p["price"] == 8.0 for p in plans)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  cell_plans_from_json
+# ──────────────────────────────────────────────────────────────────────────────
+
+def test_cell_plans_from_json_basic():
+    json_text = '{"data": 15, "price": "45.00", "name": "15 GB Plan"}'
+    plans = cell_plans_from_json(json_text)
+    assert any(p["data_gb"] == 15 and p["price"] == 45.0 for p in plans)
+
+
+def test_cell_plans_from_json_gb_string():
+    json_text = '{"plan": "15 GB", "monthlyPrice": "55.00"}'
+    plans = cell_plans_from_json(json_text)
+    assert any(p["data_gb"] == 15 and p["price"] == 55.0 for p in plans)
+
+
+def test_cell_plans_from_json_ignores_high_price():
+    json_text = '{"data": 15, "price": "500.00"}'
+    plans = cell_plans_from_json(json_text)
+    assert not any(p["price"] == 500.0 for p in plans)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  select_cell_plan_for_provider
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _cell(provider: str, gb: int, price: float, ctx: str = "") -> CellPlan:
+    return CellPlan(
+        provider=provider, data_gb=gb, price=price,
+        network="Telus", url="https://example.com",
+        raw_meta={"context_text": ctx.lower()},
+    )
+
+
+def test_cell_select_prefers_target_gb():
+    """Doit choisir le moins cher parmi >= 15 Go (target Telus)."""
+    plans = [
+        _cell("Telus", 5,  29.0),
+        _cell("Telus", 15, 55.0),
+        _cell("Telus", 20, 65.0),
+    ]
+    selected = select_cell_plan_for_provider("Telus", plans)
+    assert selected is not None
+    assert selected.data_gb == 15
+    assert selected.price == 55.0
+
+
+def test_cell_select_fallback_min_gb():
+    """Si aucun plan >= 15 Go, prend le moins cher >= 8 Go."""
+    plans = [
+        _cell("Telus", 8,  39.0),
+        _cell("Telus", 10, 45.0),
+    ]
+    selected = select_cell_plan_for_provider("Telus", plans)
+    assert selected is not None
+    assert selected.data_gb == 8
+    assert selected.price == 39.0
+
+
+def test_cell_select_fizz_ignores_bundle():
+    """Fizz : plans avec 'bundle' dans context filtrés."""
+    plans = [
+        _cell("Fizz", 15, 35.0, ctx="bundle save $35 15 Go"),
+        _cell("Fizz", 15, 50.0, ctx="15 Go $50 /mois"),
+    ]
+    selected = select_cell_plan_for_provider("Fizz", plans)
+    assert selected is not None
+    assert selected.price == 50.0
+
+
+def test_cell_select_chatr_lower_target():
+    """Chatr a target_data_gb=10, pas 15."""
+    plans = [
+        _cell("Chatr", 5,  25.0),
+        _cell("Chatr", 10, 40.0),
+        _cell("Chatr", 15, 55.0),
+    ]
+    selected = select_cell_plan_for_provider("Chatr", plans)
+    assert selected is not None
+    assert selected.data_gb == 10
+    assert selected.price == 40.0
+
+
+def test_cell_select_ignores_unlimited():
+    """Plans avec data_gb=999 (illimité) doivent être ignorés."""
+    plans = [
+        _cell("Telus", 999, 55.0),   # illimité
+        _cell("Telus", 15,  65.0),
+    ]
+    selected = select_cell_plan_for_provider("Telus", plans)
+    assert selected is not None
+    assert selected.data_gb == 15
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  check_cell_price_sanity
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _cplan(price: float, provider: str = "Telus") -> CellPlan:
+    return CellPlan(provider=provider, data_gb=15, price=price, network="Telus")
+
+
+def test_cell_sanity_passes():
+    prev = {"Telus": {"price": 55.0}}
+    assert check_cell_price_sanity("Telus", _cplan(58.0), prev) is True
+
+
+def test_cell_sanity_fails_spike():
+    prev = {"Telus": {"price": 55.0}}
+    assert check_cell_price_sanity("Telus", _cplan(90.0), prev) is False
+
+
+def test_cell_sanity_no_previous():
+    assert check_cell_price_sanity("Telus", _cplan(55.0), {}) is True
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  CELL_PROVIDER_CONFIG sanity
+# ──────────────────────────────────────────────────────────────────────────────
+
+def test_cell_config_all_providers_present():
+    for p in ["Telus", "Fido", "Koodo", "Vidéotron", "Public Mobile",
+              "Fizz", "Lucky Mobile", "Chatr"]:
+        assert p in CELL_PROVIDER_CONFIG, f"{p} missing from CELL_PROVIDER_CONFIG"
+
+
+def test_cell_config_chatr_lower_target():
+    assert CELL_PROVIDER_CONFIG["Chatr"]["target_data_gb"] == 10
+
+
+def test_cell_config_fizz_ignore_keywords():
+    assert "bundle" in CELL_PROVIDER_CONFIG["Fizz"]["ignore_keywords"]
