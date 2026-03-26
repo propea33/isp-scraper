@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-03-26T12:45:32Z",
-  "scraped_count": 3,
-  "fallback_count": 4,
+  "updated_at": "2026-03-26T12:52:43Z",
+  "scraped_count": 4,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -28,6 +28,19 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.bell.ca/Bell_Internet/Internet_access",
+      "scraped_ok": true
+    },
+    {
+      "provider": "VMedia",
+      "plan": "300 Mbps",
+      "speed_down": 300,
+      "speed_up": 20,
+      "price": 79.95,
+      "type": "Câble",
+      "note": "Réseau Bell",
+      "promo": false,
+      "promo_note": "",
+      "url": "https://www.vmedia.ca/en/homeinternet",
       "scraped_ok": true
     },
     {
@@ -70,22 +83,9 @@
       "scraped_ok": true
     },
     {
-      "provider": "VMedia",
-      "plan": "1500 Mbps",
-      "speed_down": 1500,
-      "speed_up": 20,
-      "price": 45.0,
-      "type": "Câble",
-      "note": "Réseau Bell",
-      "promo": false,
-      "promo_note": "",
-      "url": "https://www.vmedia.ca/en/homeinternet",
-      "scraped_ok": true
-    },
-    {
       "provider": "Start.ca",
-      "plan": "Cable 200",
-      "speed_down": 200,
+      "plan": "300 Mbps",
+      "speed_down": 300,
       "speed_up": 15,
       "price": 45.0,
       "type": "Câble",
@@ -93,7 +93,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.start.ca/services/high-speed-internet",
-      "scraped_ok": false
+      "scraped_ok": true
     }
   ]
 }
