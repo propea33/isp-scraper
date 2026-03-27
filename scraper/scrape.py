@@ -509,22 +509,33 @@ def cell_plans_from_json(json_text: str) -> list[dict]:
     """
     plans = []
 
-    # Champ données numérique (en Go/GB)
+    # ── Champ données numérique (en Go/GB) ─────────────────────────────────
+    DATA_FIELDS = (
+        r"data|dataAllowance|dataAmount|dataInGB|dataGB|dataGb|dataGBs|"
+        r"gb|gigabytes|mobileData|dataLimitGB|dataSize|includedData|"
+        r"totalData|dataCapacity|dataValue|dataIncluded|planData|"
+        r"data_gb|data_amount|dataQuantity|dataPackage|dataVolume|"
+        r"allotment|highSpeedData|lteData|dataLimit|dataTotal|"
+        r"offre_data|plan_data|forfait_data"
+    )
     for m in re.finditer(
-        r'"(?:data|dataAllowance|dataAmount|dataInGB|dataGB|dataGb|gb|gigabytes|'
-        r'mobileData|dataLimitGB|dataSize|includedData|totalData|dataCapacity|'
-        r'dataValue|dataIncluded|planData)"\s*:\s*"?(\d+(?:\.\d+)?)"?',
+        rf'"(?:{DATA_FIELDS})"\s*:\s*"?(\d+(?:\.\d+)?)"?',
         json_text, re.I
     ):
         gb = float(m.group(1))
+        # Conversion MB → GB si la valeur est > 200 (probablement en MB)
+        if 1024 <= gb <= 200_000:
+            gb = gb / 1024
         if not (1 <= gb <= 200):
             continue
-        gb_int = int(gb)
-        ctx = json_text[max(0, m.start()-800): min(len(json_text), m.end()+800)]
+        gb_int = round(gb)
+        ctx = json_text[max(0, m.start()-1000): min(len(json_text), m.end()+1000)]
         for pm in re.finditer(
             r'"(?:price|amount|cost|monthly|monthlyPrice|pricePerMonth|regularPrice|'
             r'salePrice|basePrice|monthlyFee|monthlyCharge|totalMonthly|monthlyRate|'
-            r'recurringCharge|rateAmount|planPrice|rate|fee)"\s*:\s*"?(\d{2,3}(?:\.\d{1,2})?)"?',
+            r'recurringCharge|rateAmount|planPrice|rate|fee|charge|billableAmount|'
+            r'promoPrice|discountedPrice|offerPrice|planFee|serviceFee|'
+            r'prix|frais|montant|tarif|cout|mensuel)"\s*:\s*"?\$?\s*(\d{2,3}(?:\.\d{1,2})?)"?',
             ctx, re.I
         ):
             price = float(pm.group(1))
@@ -532,17 +543,35 @@ def cell_plans_from_json(json_text: str) -> list[dict]:
                 plans.append({"data_gb": gb_int, "price": price,
                               "plan_name": f"{gb_int} Go"})
 
-    # Champ données sous forme "15 GB" dans le JSON
-    for m in re.finditer(r'"(\d+)\s*(?:GB|Go|gb|go)"', json_text):
-        gb_int = int(m.group(1))
+    # ── Champ données sous forme "15 GB" ou "15Go" dans une valeur JSON ────
+    for m in re.finditer(r'"(\d+)\s*(?:GB|Go|gb|go)\b[^"]*"', json_text):
+        raw = m.group(0)
+        gb_m = re.search(r'(\d+)\s*(?:GB|Go)', raw, re.I)
+        if not gb_m:
+            continue
+        gb_int = int(gb_m.group(1))
         if not (1 <= gb_int <= 200):
             continue
-        ctx = json_text[max(0, m.start()-600): min(len(json_text), m.end()+600)]
-        for pm in re.finditer(r'"(\d{2,3}(?:\.\d{1,2})?)"', ctx):
+        ctx = json_text[max(0, m.start()-800): min(len(json_text), m.end()+800)]
+        for pm in re.finditer(
+            r'"(?:price|amount|cost|monthly\w*|regularPrice|salePrice|basePrice|'
+            r'charge|fee|rate|tarif|prix|montant)"\s*:\s*"?\$?\s*(\d{2,3}(?:\.\d{1,2})?)"?',
+            ctx, re.I
+        ):
             price = float(pm.group(1))
             if 15 < price < 200:
                 plans.append({"data_gb": gb_int, "price": price,
                               "plan_name": f"{gb_int} Go"})
+
+    # ── Pattern texte libre dans JSON : "15 Go ... 65$" ────────────────────
+    for m in re.finditer(
+        r'(\d+)\s*(?:GB|Go)\b.{0,150}?\b(\d{2,3}(?:\.\d{1,2})?)\b',
+        json_text, re.S | re.I
+    ):
+        gb_int, price = int(m.group(1)), float(m.group(2))
+        if 1 <= gb_int <= 200 and 15 < price < 200:
+            plans.append({"data_gb": gb_int, "price": price,
+                          "plan_name": f"{gb_int} Go"})
 
     seen: set = set()
     unique = []
@@ -560,10 +589,12 @@ def cell_plans_from_text(text: str) -> list[dict]:
     Cherche les paires (données en Go, prix en $).
     """
     plans = []
+    MO_SUFFIX = r"(?:month|mois|mo\.?|/mo|/month|/mois)"
+    GB_UNIT   = r"(?:GB|Go|gb|go)"
 
     # Pattern 1 : "15 Go ... $XX/mois"
     for m in re.finditer(
-        r"(\d+)\s*(?:GB|Go)\b.{0,300}?\$\s*(\d{2,3}(?:\.\d{1,2})?)\s*/\s*(?:month|mois|mo\b)",
+        rf"(\d+)\s*{GB_UNIT}\b.{{0,400}}?\$\s*(\d{{2,3}}(?:\.\d{{1,2}})?)\s*/?\s*{MO_SUFFIX}",
         text, re.S | re.I
     ):
         gb, price = int(m.group(1)), float(m.group(2))
@@ -572,19 +603,28 @@ def cell_plans_from_text(text: str) -> list[dict]:
 
     # Pattern 2 : "$XX/mois ... 15 Go"
     for m in re.finditer(
-        r"\$\s*(\d{2,3}(?:\.\d{1,2})?)\s*/\s*(?:month|mois|mo\b).{0,300}?(\d+)\s*(?:GB|Go)\b",
+        rf"\$\s*(\d{{2,3}}(?:\.\d{{1,2}})?)\s*/?\s*{MO_SUFFIX}.{{0,400}}?(\d+)\s*{GB_UNIT}\b",
         text, re.S | re.I
     ):
         price, gb = float(m.group(1)), int(m.group(2))
         if 1 <= gb <= 200 and 15 < price < 200:
             plans.append({"data_gb": gb, "price": price, "plan_name": f"{gb} Go"})
 
-    # Pattern 3 : prix sans "/mois" explicite mais avec Go proche (± 50 chars)
+    # Pattern 3 : "15 Go ... $XX" (sans suffixe mois, mais proche)
     for m in re.finditer(
-        r"(\d+)\s*(?:GB|Go)\b.{0,50}?\$\s*(\d{2,3}(?:\.\d{1,2})?)\b",
+        rf"(\d+)\s*{GB_UNIT}\b.{{0,80}}?\$\s*(\d{{2,3}}(?:\.\d{{1,2}})?)\b",
         text, re.S | re.I
     ):
         gb, price = int(m.group(1)), float(m.group(2))
+        if 1 <= gb <= 200 and 15 < price < 200:
+            plans.append({"data_gb": gb, "price": price, "plan_name": f"{gb} Go"})
+
+    # Pattern 4 : "$XX ... 15 Go" (sans suffixe mois, mais proche)
+    for m in re.finditer(
+        rf"\$\s*(\d{{2,3}}(?:\.\d{{1,2}})?)\b.{{0,80}}?(\d+)\s*{GB_UNIT}\b",
+        text, re.S | re.I
+    ):
+        price, gb = float(m.group(1)), int(m.group(2))
         if 1 <= gb <= 200 and 15 < price < 200:
             plans.append({"data_gb": gb, "price": price, "plan_name": f"{gb} Go"})
 
@@ -1075,27 +1115,79 @@ async def _scrape_cell_generic(page, provider: str, url: str,
     Scraper générique cellulaire :
     1. Interception des réponses API JSON
     2. Scripts inline (Next.js, window.__STATE__, etc.)
-    3. Texte DOM complet
+    3. Extraction per-card via page.evaluate() (éléments visibles seulement)
+    4. Texte DOM complet
     """
     try:
         captured = await _navigate_and_intercept_cell(page, url,
-                                                       extra_wait_ms=extra_wait_ms)
+                                                       extra_wait_ms=max(extra_wait_ms, 5000))
         if captured:
             return _dicts_to_cellplans(provider, url, captured, source="api")
+
+        # Scroll pour déclencher le lazy loading
+        try:
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            await page.wait_for_timeout(2000)
+            await page.evaluate("window.scrollTo(0, 0)")
+            await page.wait_for_timeout(1000)
+        except Exception:
+            pass
 
         content = await page.content()
         soup = BeautifulSoup(content, "lxml")
 
-        # Scripts inline
+        # Scripts inline (Next.js __NEXT_DATA__, window.__STATE__, etc.)
         for script in soup.find_all("script"):
             raw = script.string or ""
-            if not raw or len(raw) < 50:
+            if not raw or len(raw) < 100:
+                continue
+            if not any(k in raw.lower() for k in ("gb", "go", "data", "price", "prix")):
                 continue
             found = cell_plans_from_json(raw)
             if found:
                 return _dicts_to_cellplans(provider, url, found, source="json_ld")
 
-        # Texte complet
+        # Extraction par carte via page.evaluate() — éléments visibles uniquement
+        PLAN_CARD_SELECTORS = [
+            '[class*="plan-card"]', '[class*="planCard"]', '[class*="plan_card"]',
+            '[class*="rate-plan"]', '[class*="ratePlan"]',
+            '[class*="offer-card"]', '[class*="offerCard"]',
+            '[class*="price-card"]', '[class*="priceCard"]',
+            '[data-testid*="plan"]', '[data-plan]',
+            '[class*="plan-tile"]', '[class*="planTile"]',
+            '[class*="package"]', '[class*="forfait"]',
+            '.plan', '.rate-plan', '.offer',
+        ]
+        card_texts: list[str] = []
+        for sel in PLAN_CARD_SELECTORS:
+            try:
+                card_texts = await page.evaluate(f"""() => {{
+                    const cards = Array.from(document.querySelectorAll('{sel}')).filter(el => {{
+                        const s = window.getComputedStyle(el);
+                        return s.display !== 'none' && s.visibility !== 'hidden'
+                            && s.opacity !== '0' && el.offsetParent !== null;
+                    }});
+                    if (cards.length < 2) return [];
+                    return cards.map(el => (el.innerText || el.textContent || '').trim());
+                }}""")
+                if len(card_texts) >= 2:
+                    break
+            except Exception:
+                continue
+
+        if card_texts:
+            all_plans: list[CellPlan] = []
+            for ct in card_texts:
+                if not ct.strip():
+                    continue
+                dicts = cell_plans_from_text(ct)
+                all_plans.extend(_dicts_to_cellplans(provider, url, dicts,
+                                                      source="dom",
+                                                      context_text=ct))
+            if all_plans:
+                return all_plans
+
+        # Texte complet DOM
         text = soup.get_text(" ")
         found = cell_plans_from_text(text)
         return _dicts_to_cellplans(provider, url, found, source="text",
@@ -1106,10 +1198,10 @@ async def _scrape_cell_generic(page, provider: str, url: str,
 
 
 async def scrape_telus_cell_pw(page) -> list[CellPlan]:
-    """Telus — React SPA, interception API."""
+    """Telus — React SPA, interception API + DOM."""
     return await _scrape_cell_generic(
         page, "Telus", "https://www.telus.com/en/mobility/plans",
-        extra_wait_ms=3000
+        extra_wait_ms=6000
     )
 
 
@@ -1117,17 +1209,22 @@ async def scrape_fido_cell_pw(page) -> list[CellPlan]:
     """Fido — React SPA, site français."""
     return await _scrape_cell_generic(
         page, "Fido", "https://www.fido.ca/fr/forfaits",
-        extra_wait_ms=3000
+        extra_wait_ms=5000
     )
 
 
 async def scrape_koodo_cell_pw(page) -> list[CellPlan]:
-    """Koodo — BYOP page (plans sans appareil)."""
-    return await _scrape_cell_generic(
-        page, "Koodo",
-        "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
-        extra_wait_ms=3000
-    )
+    """
+    Koodo — BYOP page (plans sans appareil).
+    Essaie d'abord la page BYOP, puis la page plans générale si vide.
+    """
+    URL_BYOP = "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone"
+    URL_PLANS = "https://www.koodomobile.com/en/rate-plans"
+    plans = await _scrape_cell_generic(page, "Koodo", URL_BYOP, extra_wait_ms=5000)
+    if plans:
+        return plans
+    # Fallback sur la page rate-plans
+    return await _scrape_cell_generic(page, "Koodo", URL_PLANS, extra_wait_ms=5000)
 
 
 async def scrape_videotron_cell_pw(page) -> list[CellPlan]:
@@ -1170,11 +1267,67 @@ async def scrape_videotron_cell_pw(page) -> list[CellPlan]:
 
 
 async def scrape_publicmobile_cell_pw(page) -> list[CellPlan]:
-    """Public Mobile — SPA Telus budget."""
-    return await _scrape_cell_generic(
-        page, "Public Mobile", "https://www.publicmobile.ca/en/plans",
-        extra_wait_ms=4000
-    )
+    """
+    Public Mobile — SPA Telus budget.
+    Page de forfaits très simple avec prix affichés directement.
+    """
+    URL = "https://www.publicmobile.ca/en/plans"
+    try:
+        captured = await _navigate_and_intercept_cell(page, URL, extra_wait_ms=6000)
+        if captured:
+            return _dicts_to_cellplans("Public Mobile", URL, captured, source="api")
+
+        # Scroll pour charger tous les forfaits
+        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        await page.wait_for_timeout(2000)
+
+        # Public Mobile affiche des cartes de forfaits directement
+        card_texts: list[str] = await page.evaluate("""() => {
+            const sels = [
+                '[class*="plan"]', '[class*="Plan"]',
+                '[class*="card"]', '[class*="Card"]',
+                '[class*="offer"]', '[class*="tier"]',
+                '[data-testid]', 'article', 'li'
+            ];
+            for (const sel of sels) {
+                const cards = Array.from(document.querySelectorAll(sel)).filter(el => {
+                    const t = (el.innerText || '');
+                    const s = window.getComputedStyle(el);
+                    return t.match(/\d+\s*G[Bo]/i) && t.match(/\$\d+/) &&
+                           s.display !== 'none' && s.visibility !== 'hidden';
+                });
+                if (cards.length >= 2) return cards.map(el => el.innerText || '');
+            }
+            return [document.body.innerText || ''];
+        }""")
+
+        all_plans: list[CellPlan] = []
+        for ct in card_texts:
+            if not ct.strip():
+                continue
+            dicts = cell_plans_from_text(ct)
+            all_plans.extend(_dicts_to_cellplans("Public Mobile", URL, dicts,
+                                                  source="dom", context_text=ct))
+        if all_plans:
+            return all_plans
+
+        content = await page.content()
+        soup = BeautifulSoup(content, "lxml")
+        for script in soup.find_all("script"):
+            raw = script.string or ""
+            if not raw or len(raw) < 100:
+                continue
+            found = cell_plans_from_json(raw)
+            if found:
+                return _dicts_to_cellplans("Public Mobile", URL, found, source="json_ld")
+
+        text = soup.get_text(" ")
+        found = cell_plans_from_text(text)
+        return _dicts_to_cellplans("Public Mobile", URL, found, source="text",
+                                    context_text=text)
+    except Exception as e:
+        print(f"    publicmobile cell error: {e}")
+    return []
 
 
 async def scrape_fizz_cell_pw(page) -> list[CellPlan]:
@@ -1248,7 +1401,7 @@ async def scrape_luckymobile_cell_pw(page) -> list[CellPlan]:
     """Lucky Mobile — Bell budget brand."""
     return await _scrape_cell_generic(
         page, "Lucky Mobile", "https://www.luckymobile.ca/shop/plans",
-        extra_wait_ms=3000
+        extra_wait_ms=5000
     )
 
 
@@ -1256,7 +1409,7 @@ async def scrape_chatr_cell_pw(page) -> list[CellPlan]:
     """Chatr — Rogers budget brand."""
     return await _scrape_cell_generic(
         page, "Chatr", "https://www.chatrwireless.com/plans",
-        extra_wait_ms=3000
+        extra_wait_ms=5000
     )
 
 
