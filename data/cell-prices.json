@@ -1,44 +1,17 @@
 {
-  "updated_at": "2026-03-26T18:04:44Z",
-  "scraped_count": 0,
-  "fallback_count": 8,
+  "updated_at": "2026-03-27T01:08:46Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
       "provider": "Telus",
-      "data_gb": 15,
-      "price": 95.0,
-      "network": "Telus",
-      "plan_name": "15 Go",
-      "url": "https://www.telus.com/en/mobility/plans",
-      "scraped_ok": false
-    },
-    {
-      "provider": "Fido",
-      "data_gb": 20,
+      "data_gb": 100,
       "price": 65.0,
-      "network": "Rogers",
-      "plan_name": "20 Go",
-      "url": "https://www.fido.ca/fr/forfaits",
-      "scraped_ok": false
-    },
-    {
-      "provider": "Koodo",
-      "data_gb": 15,
-      "price": 60.0,
       "network": "Telus",
-      "plan_name": "15 Go",
-      "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
-      "scraped_ok": false
-    },
-    {
-      "provider": "Vidéotron",
-      "data_gb": 15,
-      "price": 58.0,
-      "network": "Vidéotron",
-      "plan_name": "15 Go",
-      "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
-      "scraped_ok": false
+      "plan_name": "100 Go",
+      "url": "https://www.telus.com/en/mobility/plans",
+      "scraped_ok": true
     },
     {
       "provider": "Public Mobile",
@@ -59,22 +32,49 @@
       "scraped_ok": false
     },
     {
+      "provider": "Koodo",
+      "data_gb": 80,
+      "price": 40.0,
+      "network": "Telus",
+      "plan_name": "80 Go",
+      "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
+      "scraped_ok": true
+    },
+    {
+      "provider": "Vidéotron",
+      "data_gb": 75,
+      "price": 35.0,
+      "network": "Vidéotron",
+      "plan_name": "75 Go",
+      "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
+      "scraped_ok": true
+    },
+    {
       "provider": "Lucky Mobile",
-      "data_gb": 15,
-      "price": 45.0,
+      "data_gb": 20,
+      "price": 25.0,
       "network": "Bell",
-      "plan_name": "15 Go",
+      "plan_name": "20 Go",
       "url": "https://www.luckymobile.ca/shop/plans",
-      "scraped_ok": false
+      "scraped_ok": true
+    },
+    {
+      "provider": "Fido",
+      "data_gb": 1,
+      "price": 24.0,
+      "network": "Rogers",
+      "plan_name": "1 Go",
+      "url": "https://www.fido.ca/fr/forfaits",
+      "scraped_ok": true
     },
     {
       "provider": "Chatr",
-      "data_gb": 10,
-      "price": 40.0,
+      "data_gb": 20,
+      "price": 20.0,
       "network": "Rogers",
-      "plan_name": "10 Go",
+      "plan_name": "20 Go",
       "url": "https://www.chatrwireless.com/plans",
-      "scraped_ok": false
+      "scraped_ok": true
     }
   ]
 }
