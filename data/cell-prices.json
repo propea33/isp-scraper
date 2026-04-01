@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-03-31T12:56:16Z",
-  "scraped_count": 6,
-  "fallback_count": 2,
+  "updated_at": "2026-04-01T12:57:39Z",
+  "scraped_count": 5,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -38,7 +38,7 @@
       "network": "Telus",
       "plan_name": "80 Go",
       "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Vidéotron",
@@ -47,15 +47,6 @@
       "network": "Vidéotron",
       "plan_name": "75 Go",
       "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
-      "scraped_ok": true
-    },
-    {
-      "provider": "Lucky Mobile",
-      "data_gb": 20,
-      "price": 25.0,
-      "network": "Bell",
-      "plan_name": "20 Go",
-      "url": "https://www.luckymobile.ca/shop/plans",
       "scraped_ok": true
     },
     {
@@ -69,11 +60,20 @@
     },
     {
       "provider": "Chatr",
-      "data_gb": 20,
+      "data_gb": 15,
       "price": 20.0,
       "network": "Rogers",
-      "plan_name": "20 Go",
+      "plan_name": "15 Go",
       "url": "https://www.chatrwireless.com/plans",
+      "scraped_ok": true
+    },
+    {
+      "provider": "Lucky Mobile",
+      "data_gb": 40,
+      "price": 19.0,
+      "network": "Bell",
+      "plan_name": "40 Go",
+      "url": "https://www.luckymobile.ca/shop/plans",
       "scraped_ok": true
     }
   ]
