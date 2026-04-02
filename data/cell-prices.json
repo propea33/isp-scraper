@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-04-01T12:57:39Z",
-  "scraped_count": 5,
-  "fallback_count": 3,
+  "updated_at": "2026-04-02T12:52:05Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
@@ -32,15 +32,6 @@
       "scraped_ok": false
     },
     {
-      "provider": "Koodo",
-      "data_gb": 80,
-      "price": 45.0,
-      "network": "Telus",
-      "plan_name": "80 Go",
-      "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
-      "scraped_ok": false
-    },
-    {
       "provider": "Vidéotron",
       "data_gb": 75,
       "price": 35.0,
@@ -56,6 +47,15 @@
       "network": "Rogers",
       "plan_name": "1 Go",
       "url": "https://www.fido.ca/fr/forfaits",
+      "scraped_ok": true
+    },
+    {
+      "provider": "Koodo",
+      "data_gb": 20,
+      "price": 20.0,
+      "network": "Telus",
+      "plan_name": "20 Go",
+      "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
       "scraped_ok": true
     },
     {
