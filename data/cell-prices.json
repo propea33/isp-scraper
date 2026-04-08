@@ -1,15 +1,15 @@
 {
-  "updated_at": "2026-04-07T12:59:50Z",
+  "updated_at": "2026-04-08T13:00:42Z",
   "scraped_count": 6,
   "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
       "provider": "Telus",
-      "data_gb": 100,
-      "price": 65.0,
+      "data_gb": 80,
+      "price": 60.0,
       "network": "Telus",
-      "plan_name": "100 Go",
+      "plan_name": "80 Go",
       "url": "https://www.telus.com/en/mobility/plans",
       "scraped_ok": true
     },
