@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-08T13:00:42Z",
+  "updated_at": "2026-04-09T13:11:39Z",
   "scraped_count": 6,
   "fallback_count": 2,
   "region": "quebec",
@@ -33,10 +33,10 @@
     },
     {
       "provider": "Vidéotron",
-      "data_gb": 75,
+      "data_gb": 100,
       "price": 35.0,
       "network": "Vidéotron",
-      "plan_name": "75 Go",
+      "plan_name": "100 Go",
       "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
       "scraped_ok": true
     },
@@ -59,21 +59,21 @@
       "scraped_ok": true
     },
     {
-      "provider": "Chatr",
-      "data_gb": 15,
-      "price": 20.0,
-      "network": "Rogers",
-      "plan_name": "15 Go",
-      "url": "https://www.chatrwireless.com/plans",
-      "scraped_ok": true
-    },
-    {
       "provider": "Lucky Mobile",
       "data_gb": 50,
       "price": 19.0,
       "network": "Bell",
       "plan_name": "50 Go",
       "url": "https://www.luckymobile.ca/shop/plans",
+      "scraped_ok": true
+    },
+    {
+      "provider": "Chatr",
+      "data_gb": 18,
+      "price": 18.0,
+      "network": "Rogers",
+      "plan_name": "18 Go",
+      "url": "https://www.chatrwireless.com/plans",
       "scraped_ok": true
     }
   ]
