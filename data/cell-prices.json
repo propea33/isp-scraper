@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-12T12:40:39Z",
+  "updated_at": "2026-04-13T13:03:44Z",
   "scraped_count": 6,
   "fallback_count": 2,
   "region": "quebec",
@@ -50,21 +50,21 @@
       "scraped_ok": true
     },
     {
+      "provider": "Lucky Mobile",
+      "data_gb": 25,
+      "price": 21.0,
+      "network": "Bell",
+      "plan_name": "25 Go",
+      "url": "https://www.luckymobile.ca/shop/plans",
+      "scraped_ok": true
+    },
+    {
       "provider": "Koodo",
       "data_gb": 20,
       "price": 20.0,
       "network": "Telus",
       "plan_name": "20 Go",
       "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
-      "scraped_ok": true
-    },
-    {
-      "provider": "Lucky Mobile",
-      "data_gb": 50,
-      "price": 19.0,
-      "network": "Bell",
-      "plan_name": "50 Go",
-      "url": "https://www.luckymobile.ca/shop/plans",
       "scraped_ok": true
     },
     {
