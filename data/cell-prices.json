@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-13T13:03:44Z",
+  "updated_at": "2026-04-14T13:04:40Z",
   "scraped_count": 6,
   "fallback_count": 2,
   "region": "quebec",
@@ -69,10 +69,10 @@
     },
     {
       "provider": "Chatr",
-      "data_gb": 18,
-      "price": 18.0,
+      "data_gb": 20,
+      "price": 20.0,
       "network": "Rogers",
-      "plan_name": "18 Go",
+      "plan_name": "20 Go",
       "url": "https://www.chatrwireless.com/plans",
       "scraped_ok": true
     }
