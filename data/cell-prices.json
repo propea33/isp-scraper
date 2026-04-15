@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-04-14T13:04:40Z",
-  "scraped_count": 6,
-  "fallback_count": 2,
+  "updated_at": "2026-04-15T13:03:05Z",
+  "scraped_count": 5,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -65,7 +65,7 @@
       "network": "Telus",
       "plan_name": "20 Go",
       "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Chatr",
