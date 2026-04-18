@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-04-17T12:58:21Z",
-  "scraped_count": 5,
-  "fallback_count": 3,
+  "updated_at": "2026-04-18T12:40:18Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
@@ -11,7 +11,7 @@
       "network": "Telus",
       "plan_name": "80 Go",
       "url": "https://www.telus.com/en/mobility/plans",
-      "scraped_ok": false
+      "scraped_ok": true
     },
     {
       "provider": "Public Mobile",
