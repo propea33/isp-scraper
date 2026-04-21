@@ -1,18 +1,9 @@
 {
-  "updated_at": "2026-04-20T13:07:59Z",
+  "updated_at": "2026-04-21T13:02:58Z",
   "scraped_count": 6,
   "fallback_count": 2,
   "region": "quebec",
   "plans": [
-    {
-      "provider": "Telus",
-      "data_gb": 80,
-      "price": 60.0,
-      "network": "Telus",
-      "plan_name": "80 Go",
-      "url": "https://www.telus.com/en/mobility/plans",
-      "scraped_ok": true
-    },
     {
       "provider": "Public Mobile",
       "data_gb": 15,
@@ -21,6 +12,15 @@
       "plan_name": "15 Go",
       "url": "https://www.publicmobile.ca/en/plans",
       "scraped_ok": false
+    },
+    {
+      "provider": "Telus",
+      "data_gb": 100,
+      "price": 50.0,
+      "network": "Telus",
+      "plan_name": "100 Go",
+      "url": "https://www.telus.com/en/mobility/plans",
+      "scraped_ok": true
     },
     {
       "provider": "Fizz",
