@@ -1,9 +1,18 @@
 {
-  "updated_at": "2026-04-21T13:02:58Z",
-  "scraped_count": 6,
-  "fallback_count": 2,
+  "updated_at": "2026-04-22T13:04:18Z",
+  "scraped_count": 5,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
+    {
+      "provider": "Telus",
+      "data_gb": 80,
+      "price": 60.0,
+      "network": "Telus",
+      "plan_name": "80 Go",
+      "url": "https://www.telus.com/en/mobility/plans",
+      "scraped_ok": true
+    },
     {
       "provider": "Public Mobile",
       "data_gb": 15,
@@ -12,15 +21,6 @@
       "plan_name": "15 Go",
       "url": "https://www.publicmobile.ca/en/plans",
       "scraped_ok": false
-    },
-    {
-      "provider": "Telus",
-      "data_gb": 100,
-      "price": 50.0,
-      "network": "Telus",
-      "plan_name": "100 Go",
-      "url": "https://www.telus.com/en/mobility/plans",
-      "scraped_ok": true
     },
     {
       "provider": "Fizz",
@@ -38,7 +38,7 @@
       "network": "Telus",
       "plan_name": "60 Go",
       "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Vidéotron",
