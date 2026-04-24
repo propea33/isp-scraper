@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-04-23T13:03:39Z",
-  "scraped_count": 4,
-  "fallback_count": 3,
+  "updated_at": "2026-04-24T13:01:26Z",
+  "scraped_count": 5,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
@@ -93,7 +93,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.start.ca/services/high-speed-internet",
-      "scraped_ok": false
+      "scraped_ok": true
     }
   ]
 }
