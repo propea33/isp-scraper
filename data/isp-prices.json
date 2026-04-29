@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-04-28T13:30:02Z",
-  "scraped_count": 4,
-  "fallback_count": 3,
+  "updated_at": "2026-04-29T13:24:43Z",
+  "scraped_count": 3,
+  "fallback_count": 4,
   "region": "quebec",
   "plans": [
     {
@@ -54,7 +54,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.videotron.com/en/internet",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "EBOX",
