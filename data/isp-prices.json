@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-05-04T13:23:55Z",
-  "scraped_count": 3,
-  "fallback_count": 4,
+  "updated_at": "2026-05-05T13:14:58Z",
+  "scraped_count": 2,
+  "fallback_count": 5,
   "region": "quebec",
   "plans": [
     {
@@ -54,7 +54,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.ebox.ca/en/quebec/residential/internet-packages/",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Vidéotron",
