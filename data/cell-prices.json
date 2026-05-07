@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-05-06T13:31:13Z",
-  "scraped_count": 5,
-  "fallback_count": 3,
+  "updated_at": "2026-05-07T13:29:41Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
@@ -29,15 +29,6 @@
       "network": "Vidéotron",
       "plan_name": "15 Go",
       "url": "https://fizz.ca/en/mobile",
-      "scraped_ok": false
-    },
-    {
-      "provider": "Vidéotron",
-      "data_gb": 100,
-      "price": 35.0,
-      "network": "Vidéotron",
-      "plan_name": "100 Go",
-      "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
       "scraped_ok": false
     },
     {
@@ -74,6 +65,15 @@
       "network": "Telus",
       "plan_name": "20 Go",
       "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
+      "scraped_ok": true
+    },
+    {
+      "provider": "Vidéotron",
+      "data_gb": 100,
+      "price": 20.0,
+      "network": "Vidéotron",
+      "plan_name": "100 Go",
+      "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
       "scraped_ok": true
     }
   ]
