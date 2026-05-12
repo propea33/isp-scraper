@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-05-11T14:29:07Z",
+  "updated_at": "2026-05-12T13:56:28Z",
   "scraped_count": 2,
   "fallback_count": 5,
   "region": "quebec",
@@ -57,6 +57,19 @@
       "scraped_ok": false
     },
     {
+      "provider": "Fizz",
+      "plan": "200 Mbps",
+      "speed_down": 200,
+      "speed_up": 0,
+      "price": 52.0,
+      "type": "Câble",
+      "note": "Réseau Vidéotron",
+      "promo": false,
+      "promo_note": "",
+      "url": "https://fizz.ca/en/internet",
+      "scraped_ok": true
+    },
+    {
       "provider": "Vidéotron",
       "plan": "500 Mbps",
       "speed_down": 500,
@@ -68,19 +81,6 @@
       "promo_note": "",
       "url": "https://www.videotron.com/en/internet",
       "scraped_ok": false
-    },
-    {
-      "provider": "Fizz",
-      "plan": "200 Mbps",
-      "speed_down": 200,
-      "speed_up": 0,
-      "price": 49.0,
-      "type": "Câble",
-      "note": "Réseau Vidéotron",
-      "promo": false,
-      "promo_note": "",
-      "url": "https://fizz.ca/en/internet",
-      "scraped_ok": true
     },
     {
       "provider": "Start.ca",
