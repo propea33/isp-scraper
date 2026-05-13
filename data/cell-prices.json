@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-05-12T13:56:28Z",
+  "updated_at": "2026-05-13T14:10:44Z",
   "scraped_count": 6,
   "fallback_count": 2,
   "region": "quebec",
@@ -32,15 +32,6 @@
       "scraped_ok": false
     },
     {
-      "provider": "Lucky Mobile",
-      "data_gb": 25,
-      "price": 25.0,
-      "network": "Bell",
-      "plan_name": "25 Go",
-      "url": "https://www.luckymobile.ca/shop/plans",
-      "scraped_ok": true
-    },
-    {
       "provider": "Fido",
       "data_gb": 1,
       "price": 24.0,
@@ -56,6 +47,15 @@
       "network": "Rogers",
       "plan_name": "55 Go",
       "url": "https://www.chatrwireless.com/plans",
+      "scraped_ok": true
+    },
+    {
+      "provider": "Lucky Mobile",
+      "data_gb": 25,
+      "price": 21.0,
+      "network": "Bell",
+      "plan_name": "25 Go",
+      "url": "https://www.luckymobile.ca/shop/plans",
       "scraped_ok": true
     },
     {
