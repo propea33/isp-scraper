@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-05-24T13:01:45Z",
-  "scraped_count": 3,
-  "fallback_count": 4,
+  "updated_at": "2026-05-25T14:35:21Z",
+  "scraped_count": 2,
+  "fallback_count": 5,
   "region": "quebec",
   "plans": [
     {
@@ -93,7 +93,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.bell.ca/Bell_Internet/Internet_access",
-      "scraped_ok": true
+      "scraped_ok": false
     }
   ]
 }
