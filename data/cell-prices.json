@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-05-26T14:46:24Z",
-  "scraped_count": 7,
-  "fallback_count": 1,
+  "updated_at": "2026-05-27T14:55:46Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
@@ -29,7 +29,7 @@
       "network": "Vidéotron",
       "plan_name": "100 Go",
       "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Fizz",

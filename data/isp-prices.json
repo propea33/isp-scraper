@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-05-26T14:46:24Z",
-  "scraped_count": 2,
-  "fallback_count": 5,
+  "updated_at": "2026-05-27T14:55:46Z",
+  "scraped_count": 3,
+  "fallback_count": 4,
   "region": "quebec",
   "plans": [
     {
@@ -31,19 +31,6 @@
       "scraped_ok": false
     },
     {
-      "provider": "EBOX",
-      "plan": "500 Mbps",
-      "speed_down": 500,
-      "speed_up": 0,
-      "price": 55.0,
-      "type": "Câble",
-      "note": "Réseau Vidéotron",
-      "promo": false,
-      "promo_note": "",
-      "url": "https://www.ebox.ca/en/quebec/residential/internet-packages/",
-      "scraped_ok": false
-    },
-    {
       "provider": "Fizz",
       "plan": "200 Mbps",
       "speed_down": 200,
@@ -68,6 +55,19 @@
       "promo_note": "",
       "url": "https://www.videotron.com/en/internet",
       "scraped_ok": false
+    },
+    {
+      "provider": "EBOX",
+      "plan": "500 Mbps",
+      "speed_down": 500,
+      "speed_up": 0,
+      "price": 50.0,
+      "type": "Câble",
+      "note": "Réseau Vidéotron",
+      "promo": false,
+      "promo_note": "",
+      "url": "https://www.ebox.ca/en/quebec/residential/internet-packages/",
+      "scraped_ok": true
     },
     {
       "provider": "Start.ca",
