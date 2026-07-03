@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-02T13:30:30Z",
+  "updated_at": "2026-07-03T13:44:11Z",
   "scraped_count": 5,
   "fallback_count": 2,
   "region": "quebec",
@@ -32,8 +32,8 @@
     },
     {
       "provider": "EBOX",
-      "plan": "1000 Mbps",
-      "speed_down": 1000,
+      "plan": "500 Mbps",
+      "speed_down": 500,
       "speed_up": 0,
       "price": 55.0,
       "type": "Câble",
