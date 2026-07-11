@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-10T14:00:21Z",
+  "updated_at": "2026-07-11T12:57:02Z",
   "scraped_count": 6,
   "fallback_count": 2,
   "region": "quebec",
@@ -33,10 +33,10 @@
     },
     {
       "provider": "Lucky Mobile",
-      "data_gb": 30,
-      "price": 29.0,
+      "data_gb": 50,
+      "price": 34.0,
       "network": "Bell",
-      "plan_name": "30 Go",
+      "plan_name": "50 Go",
       "url": "https://www.luckymobile.ca/shop/plans",
       "scraped_ok": true
     },
