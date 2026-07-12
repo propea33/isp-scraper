@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-07-11T12:57:02Z",
-  "scraped_count": 3,
-  "fallback_count": 4,
+  "updated_at": "2026-07-12T12:57:53Z",
+  "scraped_count": 4,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -57,19 +57,6 @@
       "scraped_ok": true
     },
     {
-      "provider": "Bell",
-      "plan": "500 Mbps",
-      "speed_down": 500,
-      "speed_up": 0,
-      "price": 50.0,
-      "type": "Fibre",
-      "note": "",
-      "promo": false,
-      "promo_note": "",
-      "url": "https://www.bell.ca/Bell_Internet/Internet_access",
-      "scraped_ok": false
-    },
-    {
       "provider": "Start.ca",
       "plan": "300 Mbps",
       "speed_down": 300,
@@ -81,6 +68,19 @@
       "promo_note": "",
       "url": "https://www.start.ca/services/high-speed-internet",
       "scraped_ok": false
+    },
+    {
+      "provider": "Bell",
+      "plan": "150 Mbps",
+      "speed_down": 150,
+      "speed_up": 0,
+      "price": 29.99,
+      "type": "Fibre",
+      "note": "",
+      "promo": false,
+      "promo_note": "",
+      "url": "https://www.bell.ca/Bell_Internet/Internet_access",
+      "scraped_ok": true
     },
     {
       "provider": "Vidéotron",
