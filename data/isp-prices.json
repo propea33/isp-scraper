@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-13T14:07:13Z",
+  "updated_at": "2026-07-14T13:09:48Z",
   "scraped_count": 3,
   "fallback_count": 4,
   "region": "quebec",
@@ -41,7 +41,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.ebox.ca/en/quebec/residential/internet-packages/",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Fizz",
@@ -80,7 +80,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.bell.ca/Bell_Internet/Internet_access",
-      "scraped_ok": false
+      "scraped_ok": true
     },
     {
       "provider": "Vidéotron",
