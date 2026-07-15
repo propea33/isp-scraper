@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-07-14T13:09:48Z",
-  "scraped_count": 6,
-  "fallback_count": 2,
+  "updated_at": "2026-07-15T13:13:56Z",
+  "scraped_count": 5,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -29,7 +29,7 @@
       "network": "Vidéotron",
       "plan_name": "100 Go",
       "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Lucky Mobile",
