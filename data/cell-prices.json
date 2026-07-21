@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-07-20T13:48:53Z",
-  "scraped_count": 6,
-  "fallback_count": 2,
+  "updated_at": "2026-07-21T13:18:26Z",
+  "scraped_count": 5,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -56,7 +56,7 @@
       "network": "Rogers",
       "plan_name": "1 Go",
       "url": "https://www.fido.ca/fr/forfaits",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Chatr",
