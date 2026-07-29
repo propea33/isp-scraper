@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-07-28T13:40:47Z",
-  "scraped_count": 6,
-  "fallback_count": 2,
+  "updated_at": "2026-07-29T13:46:41Z",
+  "scraped_count": 5,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -11,7 +11,7 @@
       "network": "Telus",
       "plan_name": "40 Go",
       "url": "https://www.telus.com/en/mobility/plans",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Public Mobile",
@@ -42,10 +42,10 @@
     },
     {
       "provider": "Lucky Mobile",
-      "data_gb": 30,
-      "price": 35.0,
+      "data_gb": 15,
+      "price": 30.0,
       "network": "Bell",
-      "plan_name": "30 Go",
+      "plan_name": "15 Go",
       "url": "https://www.luckymobile.ca/shop/plans",
       "scraped_ok": true
     },
