@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-07-29T13:46:41Z",
-  "scraped_count": 2,
-  "fallback_count": 5,
+  "updated_at": "2026-07-30T13:27:59Z",
+  "scraped_count": 3,
+  "fallback_count": 4,
   "region": "quebec",
   "plans": [
     {
@@ -15,7 +15,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.vmedia.ca/en/homeinternet",
-      "scraped_ok": false
+      "scraped_ok": true
     },
     {
       "provider": "Cogeco",
