@@ -1,9 +1,18 @@
 {
-  "updated_at": "2026-07-31T13:41:43Z",
-  "scraped_count": 5,
-  "fallback_count": 3,
+  "updated_at": "2026-08-01T12:57:34Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
+    {
+      "provider": "Telus",
+      "data_gb": 40,
+      "price": 55.0,
+      "network": "Telus",
+      "plan_name": "40 Go",
+      "url": "https://www.telus.com/en/mobility/plans",
+      "scraped_ok": true
+    },
     {
       "provider": "Public Mobile",
       "data_gb": 15,
@@ -21,15 +30,6 @@
       "plan_name": "60 Go",
       "url": "https://www.fido.ca/fr/forfaits",
       "scraped_ok": true
-    },
-    {
-      "provider": "Telus",
-      "data_gb": 60,
-      "price": 36.0,
-      "network": "Telus",
-      "plan_name": "60 Go",
-      "url": "https://www.telus.com/en/mobility/plans",
-      "scraped_ok": false
     },
     {
       "provider": "Vidéotron",
