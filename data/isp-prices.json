@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-08-17T12:23:09Z",
-  "scraped_count": 4,
-  "fallback_count": 3,
+  "updated_at": "2026-08-18T12:24:31Z",
+  "scraped_count": 3,
+  "fallback_count": 4,
   "region": "quebec",
   "plans": [
     {
@@ -28,7 +28,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.vmedia.ca/en/homeinternet",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Vidéotron",
