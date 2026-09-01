@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-08-31T18:27:23Z",
-  "scraped_count": 6,
-  "fallback_count": 2,
+  "updated_at": "2026-09-01T15:46:40Z",
+  "scraped_count": 7,
+  "fallback_count": 1,
   "region": "quebec",
   "plans": [
     {
@@ -41,6 +41,15 @@
       "scraped_ok": true
     },
     {
+      "provider": "Fizz",
+      "data_gb": 40,
+      "price": 35.0,
+      "network": "Vidéotron",
+      "plan_name": "40 Go",
+      "url": "https://fizz.ca/en/mobile",
+      "scraped_ok": true
+    },
+    {
       "provider": "Lucky Mobile",
       "data_gb": 15,
       "price": 30.0,
@@ -48,15 +57,6 @@
       "plan_name": "15 Go",
       "url": "https://www.luckymobile.ca/shop/plans",
       "scraped_ok": true
-    },
-    {
-      "provider": "Fizz",
-      "data_gb": 50,
-      "price": 25.0,
-      "network": "Vidéotron",
-      "plan_name": "50 Go",
-      "url": "https://fizz.ca/en/mobile",
-      "scraped_ok": false
     },
     {
       "provider": "Chatr",
