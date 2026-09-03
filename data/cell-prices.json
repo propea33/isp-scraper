@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-09-02T15:39:59Z",
-  "scraped_count": 7,
-  "fallback_count": 1,
+  "updated_at": "2026-09-03T15:29:54Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
@@ -47,7 +47,7 @@
       "network": "Vidéotron",
       "plan_name": "40 Go",
       "url": "https://fizz.ca/en/mobile",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Lucky Mobile",
