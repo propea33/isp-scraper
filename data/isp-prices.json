@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-09-13T15:19:11Z",
-  "scraped_count": 4,
-  "fallback_count": 3,
+  "updated_at": "2026-09-14T17:16:14Z",
+  "scraped_count": 3,
+  "fallback_count": 4,
   "region": "quebec",
   "plans": [
     {
@@ -15,7 +15,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.ebox.ca/en/quebec/residential/internet-packages/",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "VMedia",
