@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-09-27T16:02:56Z",
-  "scraped_count": 5,
-  "fallback_count": 2,
+  "updated_at": "2026-09-28T18:58:21Z",
+  "scraped_count": 4,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -48,7 +48,7 @@
       "plan": "500 Mbps",
       "speed_down": 500,
       "speed_up": 0,
-      "price": 55.0,
+      "price": 59.0,
       "type": "Câble",
       "note": "Réseau Vidéotron",
       "promo": false,
@@ -80,7 +80,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.start.ca/services/high-speed-internet",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Bell",
