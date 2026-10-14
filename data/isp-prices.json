@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-10-13T18:40:24Z",
-  "scraped_count": 5,
-  "fallback_count": 2,
+  "updated_at": "2026-10-14T16:11:37Z",
+  "scraped_count": 4,
+  "fallback_count": 3,
   "region": "quebec",
   "plans": [
     {
@@ -28,7 +28,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.videotron.com/en/internet",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Cogeco",
