@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-27T17:02:53Z",
+  "updated_at": "2026-10-28T17:39:51Z",
   "scraped_count": 6,
   "fallback_count": 2,
   "region": "quebec",
@@ -7,7 +7,7 @@
     {
       "provider": "Telus",
       "data_gb": 15,
-      "price": 70.0,
+      "price": 55.0,
       "network": "Telus",
       "plan_name": "15 Go",
       "url": "https://www.telus.com/en/mobility/plans",
