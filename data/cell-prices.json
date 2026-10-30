@@ -1,17 +1,17 @@
 {
-  "updated_at": "2026-10-29T17:47:14Z",
-  "scraped_count": 5,
-  "fallback_count": 3,
+  "updated_at": "2026-10-30T17:28:22Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
       "provider": "Telus",
       "data_gb": 15,
-      "price": 55.0,
+      "price": 70.0,
       "network": "Telus",
       "plan_name": "15 Go",
       "url": "https://www.telus.com/en/mobility/plans",
-      "scraped_ok": false
+      "scraped_ok": true
     },
     {
       "provider": "Public Mobile",
