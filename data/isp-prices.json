@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-01T17:25:10Z",
+  "updated_at": "2026-11-02T21:05:59Z",
   "scraped_count": 3,
   "fallback_count": 4,
   "region": "quebec",
@@ -15,7 +15,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.vmedia.ca/en/homeinternet",
-      "scraped_ok": true
+      "scraped_ok": false
     },
     {
       "provider": "Vidéotron",
@@ -54,7 +54,7 @@
       "promo": false,
       "promo_note": "",
       "url": "https://www.ebox.ca/en/quebec/residential/internet-packages/",
-      "scraped_ok": false
+      "scraped_ok": true
     },
     {
       "provider": "Fizz",
