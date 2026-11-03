@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-11-02T21:05:59Z",
-  "scraped_count": 5,
-  "fallback_count": 3,
+  "updated_at": "2026-11-03T18:50:13Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
@@ -20,15 +20,6 @@
       "network": "Telus",
       "plan_name": "15 Go",
       "url": "https://www.publicmobile.ca/en/plans",
-      "scraped_ok": false
-    },
-    {
-      "provider": "Fido",
-      "data_gb": 60,
-      "price": 45.0,
-      "network": "Rogers",
-      "plan_name": "60 Go",
-      "url": "https://www.fido.ca/fr/forfaits",
       "scraped_ok": false
     },
     {
@@ -56,6 +47,15 @@
       "network": "Bell",
       "plan_name": "30 Go",
       "url": "https://www.luckymobile.ca/shop/plans",
+      "scraped_ok": true
+    },
+    {
+      "provider": "Fido",
+      "data_gb": 60,
+      "price": 27.0,
+      "network": "Rogers",
+      "plan_name": "60 Go",
+      "url": "https://www.fido.ca/fr/forfaits",
       "scraped_ok": true
     },
     {
