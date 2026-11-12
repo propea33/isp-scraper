@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-11-11T19:00:53Z",
-  "scraped_count": 5,
-  "fallback_count": 3,
+  "updated_at": "2026-11-12T19:19:59Z",
+  "scraped_count": 6,
+  "fallback_count": 2,
   "region": "quebec",
   "plans": [
     {
@@ -23,15 +23,6 @@
       "scraped_ok": false
     },
     {
-      "provider": "Fizz",
-      "data_gb": 40,
-      "price": 35.0,
-      "network": "Vidéotron",
-      "plan_name": "40 Go",
-      "url": "https://fizz.ca/en/mobile",
-      "scraped_ok": false
-    },
-    {
       "provider": "Lucky Mobile",
       "data_gb": 15,
       "price": 30.0,
@@ -47,6 +38,15 @@
       "network": "Rogers",
       "plan_name": "60 Go",
       "url": "https://www.fido.ca/fr/forfaits",
+      "scraped_ok": true
+    },
+    {
+      "provider": "Fizz",
+      "data_gb": 15,
+      "price": 27.0,
+      "network": "Vidéotron",
+      "plan_name": "15 Go",
+      "url": "https://fizz.ca/en/mobile",
       "scraped_ok": true
     },
     {
