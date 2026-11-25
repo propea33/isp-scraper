@@ -1,9 +1,18 @@
 {
-  "updated_at": "2026-11-24T21:44:23Z",
-  "scraped_count": 6,
-  "fallback_count": 2,
+  "updated_at": "2026-11-25T20:51:46Z",
+  "scraped_count": 7,
+  "fallback_count": 1,
   "region": "quebec",
   "plans": [
+    {
+      "provider": "Vidéotron",
+      "data_gb": 200,
+      "price": 100.0,
+      "network": "Vidéotron",
+      "plan_name": "200 Go",
+      "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
+      "scraped_ok": true
+    },
     {
       "provider": "Public Mobile",
       "data_gb": 15,
@@ -21,15 +30,6 @@
       "plan_name": "60 Go",
       "url": "https://www.koodomobile.com/en/shop/mobility/bring-your-own-phone",
       "scraped_ok": true
-    },
-    {
-      "provider": "Vidéotron",
-      "data_gb": 100,
-      "price": 45.0,
-      "network": "Vidéotron",
-      "plan_name": "100 Go",
-      "url": "https://www.videotron.com/en/mobile/cell-phone-plans",
-      "scraped_ok": false
     },
     {
       "provider": "Lucky Mobile",
