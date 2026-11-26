@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-11-25T20:51:46Z",
-  "scraped_count": 5,
-  "fallback_count": 2,
+  "updated_at": "2026-11-26T20:43:22Z",
+  "scraped_count": 6,
+  "fallback_count": 1,
   "region": "quebec",
   "plans": [
     {
@@ -16,19 +16,6 @@
       "promo_note": "",
       "url": "https://www.bell.ca/Bell_Internet/Internet_access",
       "scraped_ok": true
-    },
-    {
-      "provider": "EBOX",
-      "plan": "500 Mbps",
-      "speed_down": 500,
-      "speed_up": 0,
-      "price": 100.0,
-      "type": "Câble",
-      "note": "Réseau Vidéotron",
-      "promo": false,
-      "promo_note": "",
-      "url": "https://www.ebox.ca/en/quebec/residential/internet-packages/",
-      "scraped_ok": false
     },
     {
       "provider": "VMedia",
@@ -67,6 +54,19 @@
       "promo": false,
       "promo_note": "",
       "url": "https://fizz.ca/en/internet",
+      "scraped_ok": true
+    },
+    {
+      "provider": "EBOX",
+      "plan": "150 Mbps",
+      "speed_down": 150,
+      "speed_up": 0,
+      "price": 54.0,
+      "type": "Câble",
+      "note": "Réseau Vidéotron",
+      "promo": false,
+      "promo_note": "",
+      "url": "https://www.ebox.ca/en/quebec/residential/internet-packages/",
       "scraped_ok": true
     },
     {
